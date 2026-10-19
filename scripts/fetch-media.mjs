@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { spawnSync } from "node:child_process";
 
 // 仅开发构建下载固定源码，运行中的桌面应用不联网或创建这些文件。
 const directory = resolve(import.meta.dirname, "../.tools/media-source");
@@ -22,11 +23,24 @@ for (const source of sources) {
   const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
   if (existsSync(path) && digest(readFileSync(path)) === source.sha256)
     continue;
-  const response = await fetch(source.url, {
-    signal: AbortSignal.timeout(120000),
-  });
-  if (!response.ok) throw new Error(`${source.name}: HTTP ${response.status}`);
-  const bytes = Buffer.from(await response.arrayBuffer());
+  let bytes;
+  try {
+    const response = await fetch(source.url, {
+      signal: AbortSignal.timeout(120000),
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    bytes = Buffer.from(await response.arrayBuffer());
+  } catch (error) {
+    // 源站可能拒绝 Node HTTP 客户端，使用系统 curl 重试，仍校验同一份源码。
+    process.stderr.write(`${source.name}: ${error.message}; retrying with curl.\n`);
+    const result = spawnSync("curl", [
+      "--fail", "--location", "--retry", "3", "--retry-all-errors",
+      "--connect-timeout", "30", "--max-time", "120", source.url,
+    ], { maxBuffer: 64 * 1024 * 1024 });
+    if (result.error || result.status !== 0)
+      throw new Error(`${source.name}: curl failed: ${result.error?.message ?? result.stderr.toString()}`);
+    bytes = result.stdout;
+  }
   if (digest(bytes) !== source.sha256)
     throw new Error(`Source checksum mismatch: ${source.name}`);
   writeFileSync(path, bytes, { flag: existsSync(path) ? "w" : "wx" });
