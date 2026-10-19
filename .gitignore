@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.tools/
+src-tauri/target/
+src-tauri/binaries/*
+!src-tauri/binaries/README.md
+src-tauri/resources/media/*
+!src-tauri/resources/media/NOTICE.md
+.DS_Store
+*.tsbuildinfo
+src-tauri/gen/
+test-results/

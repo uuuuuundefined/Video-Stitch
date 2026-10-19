@@ -1,0 +1,936 @@
+/* 保留已确认的黑白像素终端布局，所有资源均来自本地。 */
+html {
+  background: #0d0f0e;
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  padding: 24px;
+  min-width: 280px;
+}
+body > div {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+#vs-terminal {
+  --term-bg: #101211;
+  --term-panel: #151816;
+  --term-text: #e2e6e1;
+  --term-muted: #98a297;
+  --term-line: #3a433b;
+  --term-accent: #e2e6e1;
+  --vs-gap: 24px;
+  --vs-row: 13px;
+  --vs-shadow: 0px;
+  font-family:
+    ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono",
+    "PingFang SC", "Microsoft YaHei", monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--term-text);
+  color-scheme: dark;
+  width: 100%;
+}
+
+#vs-terminal * {
+  box-sizing: border-box;
+}
+#vs-terminal [hidden] {
+  display: none !important;
+}
+#vs-terminal h1,
+#vs-terminal h2,
+#vs-terminal p {
+  margin: 0;
+}
+#vs-terminal button,
+#vs-terminal input,
+#vs-terminal select {
+  font: inherit;
+  color: inherit;
+  border-radius: 0;
+}
+#vs-terminal button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+#vs-terminal h1 {
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 1px;
+  margin: 5px 0 7px;
+}
+#vs-terminal h2 {
+  font-size: 14px;
+  font-weight: 500;
+}
+#vs-terminal b {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+#vs-terminal .term-muted {
+  color: var(--term-muted);
+}
+#vs-terminal .term-accent {
+  color: var(--term-accent);
+}
+#vs-terminal .vs-window {
+  background: var(--term-bg);
+  border: 1px solid var(--term-line);
+  box-shadow: var(--vs-shadow) var(--vs-shadow) 0 var(--term-line);
+  margin: 0 5px 5px 0;
+  position: relative;
+}
+#vs-terminal .term-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 11px 18px;
+  border-bottom: 1px solid var(--term-line);
+  font-size: 11px;
+  background: var(--term-panel);
+  color: var(--term-muted);
+  min-height: 40px;
+  flex-wrap: wrap;
+}
+#vs-terminal .term-dots {
+  color: #687367;
+  font-size: 11px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+}
+#vs-terminal .term-header {
+  padding: 22px var(--vs-gap) 27px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+#vs-terminal .term-header p {
+  font-size: 12px;
+  color: var(--term-muted);
+}
+#vs-terminal .term-brandline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px 18px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+#vs-terminal .term-brandline h1 {
+  margin: 0;
+}
+#vs-terminal .term-header > [data-action="recover"] {
+  flex-shrink: 0;
+}
+#vs-terminal .term-caret {
+  color: var(--term-accent);
+  margin-left: 3px;
+}
+#vs-terminal main {
+  padding: 0 var(--vs-gap) 16px;
+}
+#vs-terminal .term-section-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--term-muted);
+  letter-spacing: 1px;
+  margin-bottom: 11px;
+  flex-wrap: wrap;
+}
+#vs-terminal .term-section-label span + span {
+  letter-spacing: 0;
+}
+#vs-terminal .vs-imports {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 23px;
+  margin-bottom: 27px;
+}
+#vs-terminal .vs-import {
+  min-width: 0;
+  border: 1px solid var(--term-line);
+  background: var(--term-panel);
+}
+#vs-terminal .term-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--term-line);
+}
+#vs-terminal .term-group-head h2 {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+#vs-terminal .vs-text-button {
+  background: transparent;
+  border: 0;
+  padding: 4px 0;
+  font-size: 11px;
+  color: var(--term-muted);
+  white-space: nowrap;
+}
+#vs-terminal .vs-text-button:before {
+  content: "[ ";
+  color: var(--term-muted);
+}
+#vs-terminal .vs-text-button:after {
+  content: " ]";
+  color: var(--term-muted);
+}
+#vs-terminal .vs-text-button:hover:not(:disabled) {
+  color: var(--term-accent);
+}
+#vs-terminal .vs-file-list {
+  max-height: 250px;
+  overflow: auto;
+}
+#vs-terminal .vs-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+#vs-terminal .vs-file-icon {
+  align-self: start;
+  flex-shrink: 0;
+  color: var(--term-muted);
+  font-size: 12px;
+  padding-top: 1px;
+}
+#vs-terminal .vs-file-info {
+  min-width: 0;
+  flex: 1;
+}
+#vs-terminal .vs-file-name {
+  font-size: 12px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#vs-terminal .vs-file-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--term-muted);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+#vs-terminal .vs-file-error {
+  color: var(--term-accent);
+  text-decoration: underline dotted;
+}
+#vs-terminal .vs-icon-button {
+  border: 0;
+  background: transparent;
+  color: var(--term-muted);
+  width: 27px;
+  height: 29px;
+  font-size: 17px;
+  flex-shrink: 0;
+  padding: 0;
+}
+#vs-terminal .vs-icon-button:hover {
+  color: var(--term-text);
+  background: var(--term-line);
+}
+#vs-terminal .vs-drop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 55px;
+  padding: 9px 12px;
+  margin: 0 0 3px;
+}
+#vs-terminal .term-drop-prompt {
+  color: var(--term-muted);
+  align-self: start;
+  padding-top: 2px;
+  font-size: 12px;
+}
+#vs-terminal .vs-file-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--term-accent);
+  font-size: 12px;
+}
+#vs-terminal .vs-file-button:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+#vs-terminal .vs-drop p {
+  font-size: 11px;
+  color: var(--term-muted);
+  margin-top: 3px;
+}
+#vs-terminal .vs-drop.is-over {
+  background: var(--term-line);
+  outline: 1px dashed var(--term-accent);
+  outline-offset: -4px;
+}
+#vs-terminal .vs-drop.is-locked {
+  opacity: 0.4;
+}
+#vs-terminal .term-file-input {
+  display: none;
+}
+#vs-terminal .vs-group-summary {
+  border-top: 1px dashed var(--term-line);
+  padding: 7px 13px;
+  font-size: 11px;
+  color: var(--term-muted);
+}
+#vs-terminal .term-queue {
+  margin-bottom: 26px;
+}
+#vs-terminal .term-queue-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+#vs-terminal .term-queue-title {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+}
+#vs-terminal .term-combination-count {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--term-muted);
+  letter-spacing: 0;
+}
+#vs-terminal .term-queue-head .term-section-label {
+  margin-bottom: 6px;
+}
+#vs-terminal .vs-job-phase {
+  font-size: 11px;
+  color: var(--term-accent);
+  text-align: right;
+}
+#vs-terminal .vs-job-phase:before {
+  content: "● ";
+  font-size: 10px;
+}
+#vs-terminal .term-table-region {
+  max-height: 350px;
+  overflow: auto;
+}
+#vs-terminal .vs-table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  font-size: 11px;
+}
+#vs-terminal .vs-table th {
+  font-weight: 400;
+  text-align: left;
+  color: var(--term-muted);
+  padding: 8px 7px;
+  border-top: 1px solid var(--term-line);
+  border-bottom: 1px solid var(--term-line);
+  background: var(--term-panel);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+#vs-terminal .vs-table td {
+  padding: var(--vs-row) 7px;
+  border-bottom: 1px dashed var(--term-line);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+#vs-terminal .vs-table .vs-index {
+  width: 36px;
+  color: var(--term-muted);
+  white-space: nowrap;
+}
+#vs-terminal .vs-table th:nth-child(2) {
+  width: 29%;
+}
+#vs-terminal .vs-table th:nth-child(3) {
+  width: 9%;
+}
+#vs-terminal .vs-table th:nth-child(4) {
+  width: 13%;
+}
+#vs-terminal .vs-table th:nth-child(5) {
+  width: 16%;
+}
+#vs-terminal .vs-output-name {
+  font-size: 12px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#vs-terminal .vs-row-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--term-muted);
+  margin-top: 4px;
+}
+#vs-terminal .vs-row-status {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+#vs-terminal .vs-row-status .vs-text-button {
+  padding: 0;
+}
+#vs-terminal .vs-progress {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  color: var(--term-muted);
+  margin-top: 5px;
+  white-space: nowrap;
+  line-height: 1.5;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+#vs-terminal .term-progress-percent {
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--term-text);
+  font-variant-numeric: tabular-nums;
+}
+#vs-terminal [data-job-state="active"] {
+  background: var(--term-panel);
+}
+#vs-terminal [data-job-state="active"] .vs-progress,
+#vs-terminal [data-job-state="done"] .vs-progress {
+  color: var(--term-accent);
+}
+#vs-terminal .vs-empty {
+  padding: 30px 12px;
+  text-align: center;
+  color: var(--term-muted);
+  border-block: 1px dashed var(--term-line);
+}
+#vs-terminal .vs-empty p {
+  margin-top: 8px;
+  font-size: 12px;
+}
+#vs-terminal .term-export {
+  border-top: 1px solid var(--term-line);
+  padding-top: 17px;
+}
+#vs-terminal .vs-settings {
+  display: flex;
+  gap: 22px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+#vs-terminal fieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+#vs-terminal legend {
+  padding: 0;
+  margin-bottom: 8px;
+  color: var(--term-muted);
+  font-size: 11px;
+}
+#vs-terminal .vs-segment {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+#vs-terminal .vs-segment button {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 6px 9px;
+  font-size: 12px;
+  min-height: 32px;
+}
+#vs-terminal .vs-segment button:before {
+  content: "○ ";
+  color: var(--term-muted);
+}
+#vs-terminal .vs-segment button[aria-pressed="true"] {
+  background: var(--term-accent);
+  color: var(--term-bg);
+}
+#vs-terminal .vs-segment button[aria-pressed="true"]:before {
+  content: "● ";
+  color: inherit;
+}
+#vs-terminal .term-ratio-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--term-muted);
+  font-size: 11px;
+}
+#vs-terminal select {
+  border: 1px solid var(--term-line);
+  background: var(--term-panel);
+  padding: 5px 22px 5px 8px;
+  font-size: 12px;
+  min-height: 32px;
+  max-width: 100%;
+  color: var(--term-text);
+}
+#vs-terminal .term-setting-note {
+  font-size: 11px;
+  color: var(--term-muted);
+  padding-bottom: 6px;
+  flex: 1;
+  min-width: 150px;
+}
+#vs-terminal .term-destination {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-size: 14px;
+  min-width: 0;
+  flex: 1;
+}
+#vs-terminal .term-destination > .term-muted {
+  white-space: nowrap;
+  padding-top: 1px;
+}
+#vs-terminal .vs-path {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+  font-size: 14px;
+}
+#vs-terminal [data-path] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#vs-terminal .term-change {
+  font-size: 13px;
+  color: var(--term-muted);
+  flex-shrink: 0;
+}
+#vs-terminal .term-command {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border: 1px solid var(--term-line);
+  margin-top: 16px;
+  padding: 8px 13px;
+  background: var(--term-panel);
+}
+#vs-terminal .vs-main-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+#vs-terminal .vs-primary {
+  border: 1px solid var(--term-accent);
+  background: var(--term-accent);
+  color: var(--term-bg);
+  padding: 8px 12px;
+  min-height: 37px;
+  display: inline-flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#vs-terminal .vs-primary:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+#vs-terminal .vs-secondary {
+  border: 1px solid var(--term-line);
+  background: transparent;
+  padding: 7px 10px;
+  min-height: 35px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#vs-terminal .vs-secondary:hover {
+  border-color: var(--term-muted);
+}
+#vs-terminal .vs-overall {
+  margin-top: 15px;
+}
+#vs-terminal .term-overall-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--term-muted);
+  flex-wrap: wrap;
+  margin-bottom: 7px;
+}
+#vs-terminal .vs-total-progress {
+  font-size: 13px;
+  color: var(--term-accent);
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+#vs-terminal .term-statusbar {
+  background: var(--term-accent);
+  color: var(--term-bg);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  padding: 8px 15px;
+  font-size: 11px;
+  min-height: 35px;
+}
+#vs-terminal .term-session {
+  font-weight: 500;
+  border-right: 1px solid currentColor;
+  padding-right: 15px;
+}
+#vs-terminal .vs-metrics {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+#vs-terminal .vs-metrics b {
+  margin-left: 4px;
+}
+#vs-terminal .vs-notice:not(:empty) {
+  padding: 11px 0 0;
+  font-size: 11px;
+  color: var(--term-muted);
+  overflow-wrap: anywhere;
+}
+#vs-terminal .vs-notice:not(:empty):before {
+  content: "> ";
+  color: var(--term-accent);
+}
+#vs-terminal .vs-dialog {
+  font: inherit;
+  color: var(--term-text);
+  background: var(--term-bg);
+  border: 1px solid var(--term-accent);
+  padding: 21px;
+  box-shadow: 5px 5px 0 var(--term-line);
+  width: min(450px, calc(100% - 34px));
+  max-width: calc(100% - 34px);
+}
+#vs-terminal .vs-dialog::backdrop {
+  background: #0009;
+}
+#vs-terminal .term-dialog-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+#vs-terminal .term-dialog-head h2:before {
+  content: "> ";
+  color: var(--term-accent);
+}
+#vs-terminal .vs-dialog p {
+  white-space: pre-line;
+  font-size: 12px;
+  color: var(--term-muted);
+  line-height: 1.9;
+  margin-top: 15px;
+}
+#vs-terminal .term-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  margin-top: 17px;
+  color: var(--term-muted);
+}
+#vs-terminal input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--term-line);
+  background: var(--term-panel);
+  padding: 9px;
+  color: var(--term-text);
+  font-size: 12px;
+}
+#vs-terminal .term-dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  #vs-terminal .term-command {
+    flex-wrap: wrap;
+  }
+  #vs-terminal .vs-main-actions {
+    margin-left: auto;
+  }
+  #vs-terminal .vs-table th:nth-child(2) {
+    width: 25%;
+  }
+  #vs-terminal .vs-table th:nth-child(5) {
+    width: 15%;
+  }
+  #vs-terminal .term-titlebar {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 620px) {
+  #vs-terminal {
+    --vs-gap: 15px;
+  }
+  #vs-terminal h1 {
+    font-size: 23px;
+  }
+  #vs-terminal .term-titlebar {
+    gap: 5px 9px;
+  }
+  #vs-terminal .term-titlebar > span:nth-child(2) {
+    overflow-wrap: anywhere;
+  }
+  #vs-terminal .term-header {
+    padding: 22px var(--vs-gap);
+    align-items: start;
+    flex-wrap: wrap;
+  }
+  #vs-terminal .vs-imports {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 13px;
+    margin-bottom: 23px;
+  }
+  #vs-terminal .vs-file-list {
+    max-height: none;
+  }
+  #vs-terminal .term-table-region {
+    max-height: none;
+    overflow: visible;
+  }
+  #vs-terminal .vs-table,
+  #vs-terminal .vs-table tbody {
+    display: block;
+  }
+  #vs-terminal .vs-table thead {
+    display: none;
+  }
+  #vs-terminal .vs-table tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px 8px;
+    padding: 14px 0;
+    border-top: 1px dashed var(--term-line);
+  }
+  #vs-terminal .vs-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  #vs-terminal .vs-table td.vs-index {
+    display: none;
+  }
+  #vs-terminal .vs-table td:nth-child(2),
+  #vs-terminal .vs-table td:last-child {
+    grid-column: 1/-1;
+  }
+  #vs-terminal .vs-table td[data-label]:before {
+    content: attr(data-label);
+    display: block;
+    color: var(--term-muted);
+    margin-bottom: 3px;
+  }
+  #vs-terminal .vs-settings {
+    gap: 15px;
+  }
+  #vs-terminal .term-setting-note {
+    flex-basis: 100%;
+    padding: 0;
+  }
+  #vs-terminal .term-destination {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  #vs-terminal .vs-path {
+    flex-basis: 100%;
+  }
+  #vs-terminal .term-command {
+    padding: 8px 10px;
+  }
+  #vs-terminal .vs-main-actions {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  #vs-terminal .term-statusbar {
+    gap: 7px 12px;
+  }
+  #vs-terminal .vs-metrics {
+    margin-left: 0;
+    flex-basis: 100%;
+    gap: 8px 12px;
+  }
+  #vs-terminal .term-session {
+    padding-right: 10px;
+  }
+  #vs-terminal .vs-total-progress {
+    font-size: 11px;
+    letter-spacing: 0;
+  }
+  #vs-terminal .term-queue-head {
+    align-items: start;
+  }
+  #vs-terminal .vs-job-phase {
+    max-width: 45%;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (pointer: coarse) {
+  #vs-terminal button,
+  #vs-terminal select {
+    min-height: 44px;
+  }
+  #vs-terminal .vs-icon-button {
+    min-width: 40px;
+  }
+  #vs-terminal input,
+  #vs-terminal select {
+    font-size: 16px;
+  }
+}
+
+#vs-terminal button,
+#vs-terminal select {
+  cursor: pointer;
+}
+
+#vs-terminal button:disabled {
+  cursor: not-allowed;
+}
+
+#vs-terminal :focus-visible {
+  outline: 2px solid var(--term-accent);
+  outline-offset: 3px;
+}
+
+#vs-terminal .vs-metrics {
+  gap: 8px 18px;
+  margin-left: 0;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+#vs-terminal .vs-metrics > span {
+  white-space: nowrap;
+}
+
+#vs-terminal .term-statusbar {
+  row-gap: 12px;
+}
+
+#vs-terminal .vs-row-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+#vs-terminal [data-job-state="blocked"] {
+  opacity: 0.8;
+}
+
+#vs-terminal .vs-problem-summary {
+  font-size: 11px;
+  color: var(--term-muted);
+  margin: 8px 0 0;
+}
+
+@media (max-width: 620px) {
+  body {
+    padding: 12px;
+  }
+  #vs-terminal .vs-metrics {
+    justify-content: flex-start;
+    flex-basis: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 正式应用沿用已确认原型，仅补充真实分页和原生拖入状态。 */
+#vs-terminal .term-build {
+  margin-left: auto;
+  letter-spacing: 2px;
+  font-size: 10px;
+}
+#vs-terminal .vs-import.is-over {
+  outline: 2px dashed var(--term-accent);
+  outline-offset: 4px;
+}
+#vs-terminal .vs-path > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#vs-terminal .vs-pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  color: var(--term-muted);
+  font-size: 11px;
+}
+#vs-terminal .vs-file-meta {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#vs-terminal .vs-row-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#vs-terminal [data-job-state="running"] {
+  background: var(--term-panel);
+}
+#vs-terminal .has-error {
+  color: var(--term-text);
+  border-left: 2px solid var(--term-text);
+  padding-left: 10px;
+}

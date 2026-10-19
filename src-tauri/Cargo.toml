@@ -1,0 +1,52 @@
+[package]
+name = "video-stitch"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.99"
+description = "Offline Cartesian video stitching"
+
+[lib]
+name = "video_stitch"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "video-stitch"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[features]
+default = ["desktop"]
+desktop = ["dep:tauri", "dep:rfd", "dep:tauri-build", "dep:objc2-foundation"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util", "sync", "time", "fs"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "2"
+ts-rs = { version = "11", features = ["serde-compat", "no-serde-warnings"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+dirs = "6"
+sysinfo = "0.37"
+unicode-normalization = "0.1"
+sha2 = "0.10"
+tauri = { version = "2", optional = true , features = [] }
+rfd = { version = "0.15", optional = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_System_ProcessStatus", "Win32_System_Threading"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString", "NSUserDefaults"], optional = true }
+
+[build-dependencies]
+tauri-build = { version = "2", optional = true , features = [] }
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+codegen-units = 1
+lto = true
+strip = true
+panic = "abort"

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; media-src blob:; img-src data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Video Stitch · 视频拼接</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+<div id="vs-terminal" aria-label="CLI 终端风格的视频拼接工作台">
+  <div class="vs-window">
+    <div class="term-titlebar"><span class="term-dots" aria-hidden="true">● ● ●</span><span>video-stitch — terminal</span></div>
+    <header class="term-header"><div class="term-brandline"><h1>VIDEO STITCH<span class="term-caret" aria-hidden="true">_</span></h1><p>视频拼接工作台 <span class="term-muted">/</span> 两组视频，自动组合。</p></div><button type="button" class="vs-text-button cursor-interaction" data-action="recover">恢复任务</button></header>
+    <main>
+      <input type="file" accept=".json,application/json" hidden data-recovery-input aria-label="选择任务恢复记录">
+      <div class="term-section-label"><span>01 / INPUT</span><span>先播放 A，再播放 B</span></div>
+      <section class="vs-imports" aria-label="添加视频">
+        <article class="vs-import" data-group="a"><div class="term-group-head"><h2><span class="term-accent">A/</span> 视频组 A</h2><button type="button" class="vs-text-button cursor-interaction" data-action="clear" data-group="a">清空</button></div><div class="vs-file-list" data-files="a"></div><div class="vs-drop" data-drop="a"><span class="term-drop-prompt" aria-hidden="true">└─</span><div><button type="button" class="vs-file-button cursor-interaction" data-action="add" data-group="a">+ 添加视频</button><p>拖拽至此 / 支持多选</p></div></div><input class="term-file-input" type="file" multiple accept="video/*,.mkv,.mp4,.mov,.m4v,.avi,.webm" aria-label="选择视频组 A 文件" data-input="a"><div class="vs-group-summary" data-summary="a"></div></article>
+        <article class="vs-import" data-group="b"><div class="term-group-head"><h2><span class="term-accent">B/</span> 视频组 B</h2><button type="button" class="vs-text-button cursor-interaction" data-action="clear" data-group="b">清空</button></div><div class="vs-file-list" data-files="b"></div><div class="vs-drop" data-drop="b"><span class="term-drop-prompt" aria-hidden="true">└─</span><div><button type="button" class="vs-file-button cursor-interaction" data-action="add" data-group="b">+ 添加视频</button><p>拖拽至此 / 支持多选</p></div></div><input class="term-file-input" type="file" multiple accept="video/*,.mkv,.mp4,.mov,.m4v,.avi,.webm" aria-label="选择视频组 B 文件" data-input="b"><div class="vs-group-summary" data-summary="b"></div></article>
+      </section>
+      <section class="term-queue" aria-label="将要生成的视频"><div class="term-queue-head"><div><div class="term-section-label"><span>02 / QUEUE</span></div><h2 class="term-queue-title">生成队列 <span class="term-combination-count" data-count-line>2 × 2 = 4 个视频</span></h2></div><span class="vs-job-phase" data-phase>准备就绪</span></div><div class="term-table-region"><table class="vs-table"><thead><tr><th scope="col" class="vs-index">ID</th><th scope="col">输出文件</th><th scope="col">预计时长</th><th scope="col">大小</th><th scope="col">分辨率</th><th scope="col">状态 / 进度</th></tr></thead><tbody data-jobs></tbody></table><div class="vs-empty" data-empty hidden><span aria-hidden="true">[ - ]</span><p>等待输入：请添加视频组 A 和 B</p></div></div></section>
+      <section class="term-export" aria-label="拼接设置与导出"><div class="term-section-label"><span>03 / EXPORT</span></div><div class="vs-settings"><fieldset><legend>转场 / transition</legend><div class="vs-segment"><button type="button" class="cursor-interaction" data-transition="none" aria-pressed="true">不选择转场</button><button type="button" class="cursor-interaction" data-transition="boundary-fade" aria-pressed="false">叠化</button></div></fieldset><label class="term-ratio-label">画面比例 / ratio<select class="cursor-interaction" data-ratio><option value="follow-b">跟随视频 B</option><option value="9:16">9:16 · 竖屏</option><option value="16:9">16:9 · 横屏</option><option value="1:1">1:1 · 方形</option></select></label><p class="term-setting-note" data-setting-note>等比裁边铺满 · 分辨率、帧率跟随 B</p></div><div class="term-command"><div class="term-destination"><span class="term-muted">output →</span><button type="button" class="vs-path cursor-interaction" data-action="folder"><span data-path>桌面 / 视频拼接_2026-10-17_153045</span><span class="term-change">[ 更改 ]</span></button></div><div class="vs-main-actions"><button type="button" class="vs-secondary cursor-interaction" data-action="cancel" hidden>取消</button><button type="button" class="vs-secondary cursor-interaction" data-action="pause" hidden>暂停队列</button><button type="button" class="vs-primary cursor-interaction" data-action="start"><span data-primary-label>开始导出 · 4 个视频</span><span aria-hidden="true">↵</span></button></div></div><div class="vs-overall" hidden><div class="term-overall-head"><span data-overall-label>已完成 0 / 4</span><span data-overall-detail>准备中</span></div><div class="vs-total-progress" role="progressbar" aria-label="整体导出进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-total-bar aria-hidden="true">[····················] 0%</div></div></div></section>
+      <div class="vs-notice" role="status" aria-live="polite" data-notice></div>
+    </main>
+    <footer class="term-statusbar"><span class="term-session">STITCH</span><span data-runtime>本地处理 · 就绪</span><div class="vs-metrics" aria-label="性能占用">
+          <span data-tooltip="软件及相关子进程 CPU，按整机总算力统计">软件 CPU <b data-cpu>8%</b></span>
+          <span data-tooltip="软件、界面及视频处理相关进程内存">软件内存 <b data-memory>186 MB</b></span>
+          <span>系统内存 <b data-system-memory>9.4 / 32 GB</b></span>
+          <span data-tooltip="GPU 视频处理引擎占用；不可读取时明确标示">GPU <b data-gpu>暂不可用</b></span>
+          <span>速度 <b data-speed>—</b></span>
+          <span>剩余 <b data-eta>—</b></span>
+          <span data-tooltip="输出磁盘剩余空间">磁盘 <b data-disk>128 GB</b></span>
+        </div></footer>
+  </div>
+  <dialog class="vs-dialog" aria-labelledby="vs-terminal-dialog-title"><form method="dialog"><div class="term-dialog-head"><h2 id="vs-terminal-dialog-title"></h2><button type="submit" class="vs-icon-button cursor-interaction" aria-label="关闭对话框">×</button></div><p data-dialog-copy></p><label class="term-dialog-field" hidden><span data-field-label></span><input type="text" data-dialog-input></label><div class="term-dialog-buttons"><button type="submit" class="vs-secondary cursor-interaction">返回</button><button type="button" class="vs-primary cursor-interaction" data-dialog-confirm>确定</button></div></form></dialog>
+</div>
+</body>
+</html>
