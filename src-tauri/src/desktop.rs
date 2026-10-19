@@ -314,7 +314,7 @@ pub fn run() {
                         .show();
                 }
             }
-            if let tauri::RunEvent::ExitRequested { api, .. } = event {
+            if let tauri::RunEvent::ExitRequested { ref api, .. } = event {
                 let state = app.state::<DesktopState>();
                 if !state.exiting.load(Ordering::Relaxed) {
                     api.prevent_exit();
