@@ -56,13 +56,15 @@ Windows 平台配置限定 NSIS，避免生成未接入本项目卸载 hook 的 
 
 - 启动和退出仅清理带正确标记且非符号链接的这一目录；未知目录保留并提示。
 - 目录选择、默认输出路径和恢复入口共同拒绝把这一区域用于导出，检查规范化路径和大小写，防止别名绕过。
-- NSIS hook 只删除正确标记的新目录，拒绝 reparse point；上级目录只允许非递归删除空目录。
+- NSIS hook 禁用 Tauri 默认的整目录应用数据删除，仅删除正确标记的新目录，拒绝 reparse point；上级目录只允许非递归删除空目录。
 - 旧版 `%LOCALAPPDATA%\com.videostitch.desktop\WebView` 不再自动递归删除，以保留以前可能混入的导出数据。旧目录的私有数据回收尚需单独核实，不按文件后缀扫描或推断归属。
 - 所有其他导出目录及其中的正式视频、进行中视频、恢复记录保持原有保留规则。
 
 ## 尚需 Windows 环境的验收
 
 仓库包含 `.github/workflows/windows-build.yml`。它在 Windows runner 上构建固定源码、运行原生核心/媒体测试、检查完整桌面代码并产出 NSIS 安装包，Actions 提交已锁定。除手动触发外，仅对 `codex/windows-compatibility` 分支的构建相关文件推送自动运行；主分支不会因此自动运行。用户已授权推送修复及执行 CI，实际结果见验证记录，不将配置存在当作构建通过。
+
+`scripts/smoke-windows-installer.ps1` 只允许在一次性 GitHub Actions runner 执行。它将安装器静默安装到含中文和空格的临时目录，运行已安装的 FFmpeg/ffprobe，打开主窗口并通过前端正常关闭，检查运行目录清理，再验证卸载保留旧目录、未知目录及导出视频/恢复记录。该检查不代表缺少 WebView2 的离线设备或完整界面操作验收。
 
 Windows 条件编译的磁盘查询回归测试必须实际运行，验证普通路径和 `canonicalize` 扩展路径都能查询空间。真实媒体队列测试还需覆盖刷盘后原子提交、恢复记录替换和取消清理；不能只检查 FFmpeg 退出码。
 

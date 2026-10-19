@@ -66,6 +66,20 @@ try {
   if (!$opened) { throw "Installed application did not open its expected main window." }
   Start-Sleep -Seconds 3
   if (!$app.CloseMainWindow() -or !$app.WaitForExit(40000)) {
+    # 失败时记录当前进程的原生窗口文字，保留清理错误弹窗等诊断依据。
+    try {
+      Add-Type -AssemblyName UIAutomationClient
+      $condition = [System.Windows.Automation.PropertyCondition]::new(
+        [System.Windows.Automation.AutomationElement]::ProcessIdProperty, $app.Id)
+      $windows = [System.Windows.Automation.AutomationElement]::RootElement.FindAll(
+        [System.Windows.Automation.TreeScope]::Children, $condition)
+      foreach ($window in $windows) {
+        Write-Output "Open window: $($window.Current.Name)"
+        $elements = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants,
+          [System.Windows.Automation.Condition]::TrueCondition)
+        $elements | Select-Object -First 40 | ForEach-Object { Write-Output $_.Current.Name }
+      }
+    } catch { Write-Warning "Window diagnostics unavailable: $_" }
     throw "Installed application did not close normally through the frontend."
   }
   if ($app.ExitCode -ne 0) { throw "Application exited with code $($app.ExitCode)." }

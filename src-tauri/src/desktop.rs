@@ -305,32 +305,39 @@ pub fn run() {
         })
         .build(tauri::generate_context!());
     match app {
-        Ok(app) => app.run(|app, event| {
-            if matches!(event, tauri::RunEvent::Exit) {
-                if let Err(error) = clear_native_preferences() {
-                    rfd::MessageDialog::new()
-                        .set_title("运行数据未能清理")
-                        .set_description(error.message)
-                        .show();
+        Ok(app) => {
+            let on_event = |app: &tauri::AppHandle, event: tauri::RunEvent| {
+                if matches!(event, tauri::RunEvent::Exit) {
+                    if let Err(error) = clear_native_preferences() {
+                        rfd::MessageDialog::new()
+                            .set_title("运行数据未能清理")
+                            .set_description(error.message)
+                            .show();
+                    }
                 }
-            }
-            if let tauri::RunEvent::ExitRequested { ref api, .. } = event {
-                let state = app.state::<DesktopState>();
-                if !state.exiting.load(Ordering::Relaxed) {
-                    api.prevent_exit();
-                    let _ = app.emit("close-requested", ());
+                if let tauri::RunEvent::ExitRequested { ref api, .. } = event {
+                    let state = app.state::<DesktopState>();
+                    if !state.exiting.load(Ordering::Relaxed) {
+                        api.prevent_exit();
+                        let _ = app.emit("close-requested", ());
+                    }
                 }
-            }
+            };
             #[cfg(windows)]
-            if matches!(event, tauri::RunEvent::Exit) {
+            {
+                // 先返回并释放 Tauri/WebView，再删除仍可能被浏览器占用的运行文件。
+                let code = app.run_return(on_event);
                 if let Err(error) = crate::runtime::cleanup() {
                     rfd::MessageDialog::new()
                         .set_title("运行数据未能清理")
                         .set_description(error.message)
                         .show();
                 }
+                std::process::exit(code);
             }
-        }),
+            #[cfg(not(windows))]
+            app.run(on_event);
+        }
         Err(error) => {
             let _ = rfd::MessageDialog::new()
                 .set_title("Video Stitch 启动失败")
