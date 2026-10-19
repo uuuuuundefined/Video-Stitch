@@ -2,6 +2,7 @@ name: Windows build and media checks
 
 on:
   workflow_dispatch:
+  workflow_call:
   push:
     branches: [codex/windows-compatibility]
     paths:

@@ -2,6 +2,8 @@
 
 本地、离线的视频全组合拼接工具，视频组 A 在前、视频组 B 在后。面向 macOS 13+ Apple Silicon 与 Windows 10 22H2+ x64。
 
+安装包见 [Releases](https://github.com/uuuuuundefined/Video-Stitch/releases/latest)：Windows 下载 `*-setup.exe`，Apple Silicon Mac 下载 `.dmg`；同页提供 `SHA256SUMS.txt`。安装包尚未正式签名或公证，具体功能及验证限制见 [版本说明](docs/RELEASE_NOTES.md)。
+
 - [PRD](docs/PRD.md)：已确认的单页面产品规则及验收要求。
 - [关键决策](docs/DECISIONS.md)：本轮最终决定、已撤回的旧建议及授权边界。
 - [AI 开发执行说明](docs/AI_DEVELOPMENT.md)：模块、IPC、时间线、恢复、性能和安装卸载契约。
@@ -51,3 +53,7 @@ npm run test:media-components
 - `scripts`：本地工具链入口、媒体构建/校验和限制归属的 Mac 卸载清理脚本。
 
 Mac 将应用包移入废纸篓可移除内置组件。包外固定私有路径清理说明与脚本见 [验证记录](docs/VALIDATION.md)；所有导出目录始终保留。
+
+## 发布
+
+`.github/workflows/release.yml` 在主分支更新版本或发布工作流时自动运行，也可在 Actions 手动触发。发布前同步 `package.json`、`src-tauri/Cargo.toml`、`src-tauri/Cargo.lock` 和 `src-tauri/tauri.conf.json` 的版本，并更新 `docs/RELEASE_NOTES.md` 的版本标题及内容。Windows 原生构建/安装测试与 macOS Apple Silicon 构建/真实媒体测试全部通过后，自动创建对应 `vX.Y.Z` 标签和正式 Release，上传两份安装包和校验和；已发布的同版本不会被覆盖。上传中断可重新运行发布 job，恢复同一提交的草稿。

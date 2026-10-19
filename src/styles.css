@@ -315,6 +315,7 @@ body {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
+  min-width: 760px;
   font-size: 11px;
 }
 #vs-terminal .vs-table th {
@@ -342,16 +343,19 @@ body {
   white-space: nowrap;
 }
 #vs-terminal .vs-table th:nth-child(2) {
-  width: 29%;
+  width: 27%;
 }
 #vs-terminal .vs-table th:nth-child(3) {
   width: 9%;
 }
 #vs-terminal .vs-table th:nth-child(4) {
-  width: 13%;
+  width: 12%;
 }
 #vs-terminal .vs-table th:nth-child(5) {
-  width: 16%;
+  width: 14%;
+}
+#vs-terminal .vs-table th.vs-actions-column {
+  width: 110px;
 }
 #vs-terminal .vs-output-name {
   font-size: 12px;
@@ -374,8 +378,11 @@ body {
   flex-wrap: wrap;
   font-size: 11px;
 }
-#vs-terminal .vs-row-status .vs-text-button {
-  padding: 0;
+#vs-terminal .vs-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 #vs-terminal .vs-progress {
   font-size: 12px;
@@ -712,6 +719,7 @@ body {
   #vs-terminal .vs-table,
   #vs-terminal .vs-table tbody {
     display: block;
+    min-width: 0;
   }
   #vs-terminal .vs-table thead {
     display: none;
@@ -733,8 +741,14 @@ body {
     display: none;
   }
   #vs-terminal .vs-table td:nth-child(2),
-  #vs-terminal .vs-table td:last-child {
+  #vs-terminal .vs-table td.vs-status-column,
+  #vs-terminal .vs-table td.vs-actions-column {
     grid-column: 1/-1;
+  }
+  #vs-terminal .vs-row-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 10px;
   }
   #vs-terminal .vs-table td[data-label]:before {
     content: attr(data-label);
@@ -829,13 +843,6 @@ body {
 
 #vs-terminal .term-statusbar {
   row-gap: 12px;
-}
-
-#vs-terminal .vs-row-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 6px;
 }
 
 #vs-terminal [data-job-state="blocked"] {

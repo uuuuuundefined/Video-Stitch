@@ -64,7 +64,7 @@ Windows 在完成 WebView 和事件注册后才显示窗口；空队列关闭由
 
 ## CI 与剩余验收
 
-仓库包含 `.github/workflows/windows-build.yml`。它在 Windows runner 上构建固定源码、运行原生核心/媒体测试、检查完整桌面代码并产出 NSIS 安装包，Actions 提交已锁定。除手动触发外，仅对 `codex/windows-compatibility` 分支的构建相关文件推送自动运行；主分支不会因此自动运行。用户已授权推送修复及执行 CI，实际结果见验证记录，不将配置存在当作构建通过。
+仓库包含 `.github/workflows/windows-build.yml`。它在 Windows runner 上构建固定源码、运行原生核心/媒体测试、检查完整桌面代码并产出 NSIS 安装包，Actions 提交已锁定。支持手动触发、验证分支自动运行及被 `.github/workflows/release.yml` 复用。主分支更新版本或发布工作流后，发布流程会调用它，全部平台检查通过后将安装包发布到 Releases。用户已授权合并及发布，实际结果见验证记录，不将配置存在当作构建通过。
 
 `scripts/smoke-windows-installer.ps1` 只允许在一次性 GitHub Actions runner 执行。它将安装器静默安装到含中文和空格的临时目录，运行已安装的 FFmpeg/ffprobe，检查主窗口位于 Windows 工作区内，首次出现窗口即发送正常关闭请求，等待运行目录清理，并确认短时清理进程结束。卸载覆盖未知目录、目录链接、文件被占用后重试，核对旧目录及导出视频/恢复记录保持不变。该检查不代表缺少 WebView2 的离线设备或完整界面操作验收。
 

@@ -1,9 +1,8 @@
 /* 保留已确认的黑白像素终端布局，所有资源均来自本地。 */
-html{background:#0d0f0e;color-scheme:dark}
-body{margin:0;padding:24px;min-width:280px}
-body>div{max-width:1280px;margin:0 auto}
+html{height:100%;overflow:hidden;background:#0d0f0e;color-scheme:dark}
+body{height:100%;margin:0;min-width:280px;overflow:hidden}
 
-#vs-terminal{--term-bg:#101211;--term-panel:#151816;--term-text:#e2e6e1;--term-muted:#98a297;--term-line:#3a433b;--term-accent:#e2e6e1;--vs-gap:24px;--vs-row:13px;--vs-shadow:0px;font-family:ui-monospace,"SFMono-Regular",Menlo,Monaco,Consolas,"Liberation Mono","PingFang SC","Microsoft YaHei",monospace;font-size:13px;line-height:1.6;color:var(--term-text);color-scheme:dark;width:100%}
+#vs-terminal{--term-bg:#101211;--term-panel:#151816;--term-text:#e2e6e1;--term-muted:#98a297;--term-line:#3a433b;--term-accent:#e2e6e1;--vs-gap:24px;--vs-row:13px;font-family:ui-monospace,"SFMono-Regular",Menlo,Monaco,Consolas,"Liberation Mono","PingFang SC","Microsoft YaHei",monospace;font-size:13px;line-height:1.6;color:var(--term-text);color-scheme:dark;width:100%;height:100vh;height:100dvh;display:grid;grid-template-rows:minmax(0,1fr) auto;background:var(--term-bg)}
 
 #vs-terminal *{box-sizing:border-box}
 #vs-terminal [hidden]{display:none!important}
@@ -15,9 +14,7 @@ body>div{max-width:1280px;margin:0 auto}
 #vs-terminal b{font-weight:500;font-variant-numeric:tabular-nums}
 #vs-terminal .term-muted{color:var(--term-muted)}
 #vs-terminal .term-accent{color:var(--term-accent)}
-#vs-terminal .vs-window{background:var(--term-bg);border:1px solid var(--term-line);box-shadow:var(--vs-shadow) var(--vs-shadow) 0 var(--term-line);margin:0 5px 5px 0;position:relative}
-#vs-terminal .term-titlebar{display:flex;align-items:center;gap:18px;padding:11px 18px;border-bottom:1px solid var(--term-line);font-size:11px;background:var(--term-panel);color:var(--term-muted);min-height:40px;flex-wrap:wrap}
-#vs-terminal .term-dots{color:#687367;font-size:11px;letter-spacing:2px;white-space:nowrap}
+#vs-terminal .vs-content{min-height:0;min-width:0;overflow-y:auto}
 #vs-terminal .term-header{padding:22px var(--vs-gap) 27px;display:flex;align-items:center;justify-content:space-between;gap:15px}
 #vs-terminal .term-header p{font-size:12px;color:var(--term-muted)}
 #vs-terminal .term-brandline{display:flex;align-items:baseline;gap:8px 18px;flex-wrap:wrap;min-width:0}
@@ -124,13 +121,10 @@ body>div{max-width:1280px;margin:0 auto}
 #vs-terminal .vs-main-actions{margin-left:auto}
 #vs-terminal .vs-table th:nth-child(2){width:25%}
 #vs-terminal .vs-table th:nth-child(5){width:15%}
-#vs-terminal .term-titlebar{gap:10px}
 }
 
 @media(max-width:620px){#vs-terminal{--vs-gap:15px}
 #vs-terminal h1{font-size:23px}
-#vs-terminal .term-titlebar{gap:5px 9px}
-#vs-terminal .term-titlebar>span:nth-child(2){overflow-wrap:anywhere}
 #vs-terminal .term-header{padding:22px var(--vs-gap);align-items:start;flex-wrap:wrap}
 #vs-terminal .vs-imports{grid-template-columns:minmax(0,1fr);gap:13px;margin-bottom:23px}
 #vs-terminal .vs-file-list{max-height:none}
@@ -179,8 +173,7 @@ body>div{max-width:1280px;margin:0 auto}
 
 #vs-terminal .vs-problem-summary{font-size:11px;color:var(--term-muted);margin:8px 0 0}
 
-@media(max-width:620px){body{padding:12px}
-#vs-terminal .vs-metrics{justify-content:flex-start;flex-basis:100%}
+@media(max-width:620px){#vs-terminal .vs-metrics{justify-content:flex-start;flex-basis:100%}
 }
 
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}

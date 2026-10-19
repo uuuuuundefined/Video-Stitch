@@ -88,6 +88,9 @@ export function TaskQueue({
                 <th scope="col">大小</th>
                 <th scope="col">分辨率</th>
                 <th scope="col">状态 / 进度</th>
+                <th scope="col" className="vs-actions-column">
+                  操作
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -106,6 +109,44 @@ export function TaskQueue({
                     >
                       {task.sourceA} ＋ {task.sourceB}
                     </span>
+                  </td>
+                  <td data-label="时长">
+                    {task.result ? "" : "预计 "}
+                    {duration(task.result?.seconds ?? task.seconds)}
+                  </td>
+                  <td data-label="大小">
+                    {task.result ? bytes(task.result.bytes) : "暂无法估算"}
+                  </td>
+                  <td data-label="分辨率">
+                    {task.result
+                      ? `${task.result.width} × ${task.result.height}`
+                      : task.canvas
+                        ? `${task.canvas.width} × ${task.canvas.height}`
+                        : "待确认"}
+                  </td>
+                  <td className="vs-status-column">
+                    <div className="vs-row-status">
+                      <span>{labels[task.state]}</span>
+                    </div>
+                    <div
+                      className="vs-progress"
+                      role="progressbar"
+                      aria-label={`${task.name} 导出进度`}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={Math.floor(task.progress)}
+                    >
+                      <span aria-hidden="true">
+                        {progressBar(task.progress)}
+                      </span>
+                      <span className="term-progress-percent">
+                        {task.state === "blocked"
+                          ? "—"
+                          : `${Math.floor(task.progress)}%`}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="vs-actions-column" data-label="操作">
                     <div className="vs-row-actions">
                       {task.state === "succeeded" ? (
                         <button
@@ -145,42 +186,6 @@ export function TaskQueue({
                           取消此项
                         </button>
                       ) : null}
-                    </div>
-                  </td>
-                  <td data-label="时长">
-                    {task.result ? "" : "预计 "}
-                    {duration(task.result?.seconds ?? task.seconds)}
-                  </td>
-                  <td data-label="大小">
-                    {task.result ? bytes(task.result.bytes) : "暂无法估算"}
-                  </td>
-                  <td data-label="分辨率">
-                    {task.result
-                      ? `${task.result.width} × ${task.result.height}`
-                      : task.canvas
-                        ? `${task.canvas.width} × ${task.canvas.height}`
-                        : "待确认"}
-                  </td>
-                  <td>
-                    <div className="vs-row-status">
-                      <span>{labels[task.state]}</span>
-                    </div>
-                    <div
-                      className="vs-progress"
-                      role="progressbar"
-                      aria-label={`${task.name} 导出进度`}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={Math.floor(task.progress)}
-                    >
-                      <span aria-hidden="true">
-                        {progressBar(task.progress)}
-                      </span>
-                      <span className="term-progress-percent">
-                        {task.state === "blocked"
-                          ? "—"
-                          : `${Math.floor(task.progress)}%`}
-                      </span>
                     </div>
                   </td>
                 </tr>
