@@ -7,6 +7,7 @@ on:
     paths:
       - ".github/workflows/windows-installer-check.yml"
       - ".github/windows-installer-probe.ps1"
+      - ".github/windows-webview-probe.mjs"
 
 permissions:
   contents: read
@@ -23,7 +24,7 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: video-stitch-windows-x64
-          run-id: 39235874986
+          run-id: 39239866580
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: installer
       - run: ./.github/windows-installer-probe.ps1

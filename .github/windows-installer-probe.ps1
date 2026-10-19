@@ -7,6 +7,7 @@ $installation = Join-Path $env:RUNNER_TEMP "Video Stitch 安装诊断"
 $runtime = Join-Path ([Environment]::GetFolderPath("LocalApplicationData")) "com.videostitch.desktop/Runtime-v2"
 $installed = Start-Process $installer[0].FullName -ArgumentList "/S /D=$installation" -Wait -PassThru
 if ($installed.ExitCode -ne 0) { throw "Installation failed." }
+$env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9222 --remote-debugging-address=127.0.0.1"
 $app = Start-Process (Join-Path $installation "video-stitch.exe") -PassThru
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName System.Drawing
@@ -49,11 +50,18 @@ function Show-AppState($stage) {
 try {
   Start-Sleep -Seconds 8
   Show-AppState "before-close"
+  node .github/windows-webview-probe.mjs read
   Write-Output "CloseMainWindow result: $($app.CloseMainWindow())"
   foreach ($stage in @("after-5s", "after-10s", "after-15s")) {
     Start-Sleep -Seconds 5
     Show-AppState $stage
     if ($app.HasExited) { break }
+    node .github/windows-webview-probe.mjs read
+  }
+  if (!$app.HasExited) {
+    node .github/windows-webview-probe.mjs exit
+    Start-Sleep -Seconds 3
+    Show-AppState "after-direct-exit"
   }
   if (!$app.HasExited) { throw "Installed app still running after close." }
 } finally {
