@@ -42,7 +42,7 @@ jobs:
           path: release-assets
           run-id: ${{ steps.source.outputs.run_id }}
           github-token: ${{ github.token }}
-      - name: Complete checked draft release
+      - name: Generate checksums and complete checked draft release
         run: node scripts/publish-release.mjs
         env:
           RELEASE_TAG: ${{ steps.source.outputs.tag }}

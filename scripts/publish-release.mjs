@@ -43,11 +43,13 @@ let assets = readdirSync("release-assets");
 if (
   assets.filter((name) => name.endsWith("-setup.exe")).length !== 1 ||
   assets.filter((name) => name.endsWith(".dmg")).length !== 1 ||
-  !assets.includes("SHA256SUMS.txt") ||
-  assets.length !== 3
+  !(
+    assets.length === 2 ||
+    (assets.length === 3 && assets.includes("SHA256SUMS.txt"))
+  )
 )
   throw new Error(
-    "Expected one Windows installer, one macOS image and checksums",
+    "Expected one Windows installer, one macOS image and optional checksums",
   );
 // GitHub 会把附件名的空格改为点号；上传前统一命名并同步校验文件。
 for (const name of assets) {
@@ -67,6 +69,7 @@ for (const name of assets.filter((name) => name !== "SHA256SUMS.txt")) {
   checksums.push(`${hash.digest("hex")}  ${name}\n`);
 }
 writeFileSync("release-assets/SHA256SUMS.txt", checksums.join(""));
+assets = readdirSync("release-assets").sort();
 const notes = readFileSync("docs/RELEASE_NOTES.md", "utf8");
 if (!notes.startsWith(`# Video Stitch ${tag}\n`))
   throw new Error("Release notes do not match the package version");
