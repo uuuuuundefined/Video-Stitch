@@ -8,26 +8,22 @@ import {
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { mediaTarget, validateMediaBinary } from "./media-components.mjs";
 
 // 分离本机开发组件与按校验和提供的发布组件，禁止把 Homebrew 动态依赖冒充独立包。
 const args = process.argv.slice(2);
 const option = (key) => args[args.indexOf(key) + 1];
 const dev = args.includes("--dev");
-const target = args.includes("--target")
-  ? option("--target")
-  : process.platform === "darwin" && process.arch === "arm64"
-    ? "aarch64-apple-darwin"
-    : process.platform === "win32" && process.arch === "x64"
-      ? "x86_64-pc-windows-msvc"
-      : null;
-if (
-  !target ||
-  !["aarch64-apple-darwin", "x86_64-pc-windows-msvc"].includes(target)
-)
-  throw new Error("Unsupported target");
+const target = mediaTarget(
+  args.includes("--target") ? option("--target") : null,
+);
+if (target !== mediaTarget())
+  throw new Error(
+    "Stage media on the matching host so executable versions can be verified",
+  );
 const root = resolve(import.meta.dirname, "..");
-mkdirSync(resolve(root, "src-tauri/binaries"), { recursive: true });
 const manifest = { target, developmentOnly: dev, binaries: {} };
+const staged = [];
 for (const name of ["ffmpeg", "ffprobe"]) {
   const source = args.includes(`--${name}`)
     ? option(`--${name}`)
@@ -39,9 +35,9 @@ for (const name of ["ffmpeg", "ffprobe"]) {
           .split("\n")[0]
       : null;
   if (!source) throw new Error(`Provide --${name}`);
-  const digest = createHash("sha256")
-    .update(readFileSync(source))
-    .digest("hex");
+  const bytes = readFileSync(source);
+  validateMediaBinary(bytes, target);
+  const digest = createHash("sha256").update(bytes).digest("hex");
   if (
     !dev &&
     (!args.includes(`--sha256-${name}`) ||
@@ -52,8 +48,7 @@ for (const name of ["ffmpeg", "ffprobe"]) {
     root,
     `src-tauri/binaries/${name}-${target}${target.includes("windows") ? ".exe" : ""}`,
   );
-  copyFileSync(source, destination);
-  chmodSync(destination, 0o755);
+  staged.push({ source, destination });
   manifest.binaries[name] = {
     sha256: digest,
     version: execFileSync(source, ["-version"], { encoding: "utf8" })
@@ -62,8 +57,19 @@ for (const name of ["ffmpeg", "ffprobe"]) {
       .join("\n"),
   };
 }
+// 两个组件全部校验通过后才更新暂存区及配套 manifest。
+mkdirSync(resolve(root, "src-tauri/binaries"), { recursive: true });
+mkdirSync(resolve(root, "src-tauri/resources/media"), { recursive: true });
+for (const { source, destination } of staged) {
+  if (resolve(source) !== destination) copyFileSync(source, destination);
+  chmodSync(destination, 0o755);
+}
 writeFileSync(
   resolve(root, "src-tauri/binaries/manifest.json"),
+  JSON.stringify(manifest, null, 2) + "\n",
+);
+writeFileSync(
+  resolve(root, "src-tauri/resources/media/manifest.json"),
   JSON.stringify(manifest, null, 2) + "\n",
 );
 process.stdout.write(

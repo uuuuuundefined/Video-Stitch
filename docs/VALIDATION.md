@@ -43,7 +43,15 @@ Mac 使用 nonPersistent WebView；需继续盘点 WebKit 系统托管数据和�
 
 最终优化包实测：关闭 Vite 开发服务后可独立启动；打开并取消原生选择器、正常关闭应用后，上述六处固定自有路径均不存在，四个导出文件仍保留。该证据限于当前机器及已操作流程，不替代全生命周期磁盘差异审计。
 
-`scripts/uninstall-macos.sh` 在应用退出后只清理以上固定归属路径及偏好域，不扫描、读取或清理任何导出目录。它也随包提供。Windows 使用 `%LOCALAPPDATA%/com.videostitch.desktop/WebView` 作为专属运行目录；启动清理上次异常遗留，退出等待清理，NSIS 卸载 hook 清理固定自有目录，不触碰共享 WebView2 和导出数据。Windows 清理仍需真机验证。
+`scripts/uninstall-macos.sh` 在应用退出后只清理以上固定归属路径及偏好域，不扫描、读取或清理任何导出目录。它也随包提供。Windows 新版使用带归属标记的 `%LOCALAPPDATA%/com.videostitch.desktop/Runtime-v2/WebView`；启动、退出及 NSIS 卸载只处理已确认归属的新目录，输出及恢复入口排除该运行区域。旧版 `WebView` 目录不自动递归删除，以保护其中可能存在的任务数据；上级目录只允许删除空目录。Windows 实际清理时序仍需真机验证。
+
+## 2026-10-19 Windows 专项修复
+
+- 提交视频前改用具有写权限但不截断的句柄执行 `sync_all`。Windows 空间查询和底部磁盘指标统一调用 `GetDiskFreeSpaceExW`，使用当前用户可用空间，不再比较普通盘符和扩展路径前缀。
+- 新运行目录的归属标记、符号链接拒绝和导出边界检查覆盖选择目录、默认桌面目录及恢复入口。新增回归测试验证未知目录保留视频和恢复记录、正确目录清理保留同级成果、符号链接不删除用户数据、组件路径边界不误伤相近名称。归属标记属于固定私有运行数据，不记录业务历史。
+- 增加 `media:build:windows` 固定源码配方、PE x64 架构/系统 DLL 校验、目标与 manifest 一致性检查。Windows 配置仅生成接入自有卸载 hook 的 NSIS，并使用离线 WebView2 安装器；基础配方仅含 libx264 软件编码，不把 NVENC/QSV/AMF 视为已随包交付。
+- 当前 Mac 上 11 项核心测试、8 项真实媒体回归、4 项组件解析测试通过；前端 TypeScript/Vite 构建、Rust fmt、Mac 全 targets clippy 和 Windows 媒体核心含测试代码的交叉编译/clippy 通过。现有 Mac 发布组件校验通过；指定 Windows 目标时正确拒绝 Mac manifest。
+- 完整 Windows 桌面交叉检查仍停在缺少 `ffmpeg-x86_64-pc-windows-msvc.exe`，不能标为通过。新增仅手动触发、Actions 提交锁定的 Windows CI 配置，尚未推送或运行；没有 Windows 安装包。Windows 原生测试、NSIS hook、离线安装、硬件编码、原生选择器历史及强制结束子进程仍待验证。构建方法见 [Windows 构建说明](WINDOWS_BUILD.md)。
 
 ## 未完成的生产验收
 

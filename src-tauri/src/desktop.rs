@@ -226,13 +226,16 @@ pub fn run() {
         return;
     }
     #[cfg(windows)]
-    if let Err(error) = cleanup_runtime() {
-        rfd::MessageDialog::new()
-            .set_title("运行数据需要处理")
-            .set_description(error.message)
-            .show();
-        return;
-    }
+    let runtime_directory = match crate::runtime::prepare() {
+        Ok(directory) => directory,
+        Err(error) => {
+            rfd::MessageDialog::new()
+                .set_title("运行数据需要处理")
+                .set_description(error.message)
+                .show();
+            return;
+        }
+    };
     let service = Service::new(engine::locate().ok());
     let app = tauri::Builder::default()
         .manage(DesktopState {
@@ -272,7 +275,7 @@ pub fn run() {
             .incognito(true);
             #[cfg(windows)]
             {
-                builder = builder.data_directory(runtime_directory());
+                builder = builder.data_directory(runtime_directory);
             }
             let _window = builder.build()?;
             tauri::async_runtime::spawn(async move {
@@ -320,7 +323,7 @@ pub fn run() {
             }
             #[cfg(windows)]
             if matches!(event, tauri::RunEvent::Exit) {
-                if let Err(error) = cleanup_runtime() {
+                if let Err(error) = crate::runtime::cleanup() {
                     rfd::MessageDialog::new()
                         .set_title("运行数据未能清理")
                         .set_description(error.message)
@@ -353,33 +356,4 @@ fn clear_native_preferences() -> Result<()> {
         }
     }
     Ok(())
-}
-
-/// WebView 的私有运行目录与业务导出目录完全分离。
-#[cfg(windows)]
-fn runtime_directory() -> PathBuf {
-    dirs::data_local_dir()
-        .unwrap_or_else(std::env::temp_dir)
-        .join("com.videostitch.desktop")
-        .join("WebView")
-}
-
-/// 只清理固定自有 WebView 目录；失败通过原生提示交代路径。
-#[cfg(windows)]
-fn cleanup_runtime() -> Result<()> {
-    let directory = runtime_directory();
-    for _ in 0..30 {
-        match std::fs::remove_dir_all(&directory) {
-            Ok(()) => return Ok(()),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-            Err(_) => std::thread::sleep(std::time::Duration::from_millis(100)),
-        }
-    }
-    Err(AppError::new(
-        "CLEANUP_FAILED",
-        format!(
-            "请关闭残留的应用界面进程后删除软件私有目录：{}。导出目录不会被清理。",
-            directory.display()
-        ),
-    ))
 }
