@@ -291,9 +291,14 @@ pub fn run() {
                             work.position.y as f64 / scale + 8.0,
                         );
                 }
-                builder = builder.data_directory(runtime_directory);
+                // WebView 创建期间会泵送 Windows 消息；监听器注册完成前不暴露可关闭窗口。
+                builder = builder.visible(false).data_directory(runtime_directory);
             }
-            let _window = builder.build()?;
+            let window = builder.build()?;
+            #[cfg(windows)]
+            window.show()?;
+            #[cfg(not(windows))]
+            let _ = window;
             tauri::async_runtime::spawn(async move {
                 service.initialize().await;
             });

@@ -109,7 +109,7 @@ try {
         $elements | Select-Object -First 40 | ForEach-Object { Write-Output $_.Current.Name }
       }
     } catch { Write-Warning "Window diagnostics unavailable: $_" }
-    throw "Installed application did not close normally through the frontend."
+    throw "Installed application did not complete controlled shutdown."
   }
   if ($app.ExitCode -ne 0) { throw "Application exited with code $($app.ExitCode)." }
   for ($attempt = 0; $attempt -lt 150 -and (Test-Path $runtime); $attempt++) {
