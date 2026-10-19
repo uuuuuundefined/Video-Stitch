@@ -83,7 +83,18 @@ try {
     throw "Installed application did not close normally through the frontend."
   }
   if ($app.ExitCode -ne 0) { throw "Application exited with code $($app.ExitCode)." }
+  for ($attempt = 0; $attempt -lt 150 -and (Test-Path $runtime); $attempt++) {
+    Start-Sleep -Milliseconds 100
+  }
   if (Test-Path $runtime) { throw "WebView runtime remains after normal exit." }
+  for ($attempt = 0; $attempt -lt 50; $attempt++) {
+    $remaining = @(Get-CimInstance Win32_Process | Where-Object {
+      $_.ExecutablePath -eq (Join-Path $installation "video-stitch.exe")
+    })
+    if ($remaining.Count -eq 0) { break }
+    Start-Sleep -Milliseconds 100
+  }
+  if ($remaining.Count -ne 0) { throw "Application cleanup process is still running." }
 } finally {
   if (!$app.HasExited) { Stop-Process -Id $app.Id -Force }
 }
@@ -96,6 +107,23 @@ if ([IO.File]::ReadAllText((Join-Path $runtime "unknown.mp4")) -ne "unknown-owne
 
 Install-SmokeApp
 [IO.File]::WriteAllText((Join-Path $runtime ".video-stitch-owner"), "video-stitch-runtime-v2")
+$junction = Join-Path $runtime "export-link"
+New-Item -ItemType Junction -Path $junction -Target $exports | Out-Null
 Uninstall-SmokeApp
-if (Test-Path $runtime) { throw "Owned runtime directory remains after uninstall." }
+if ([IO.File]::ReadAllText((Join-Path $runtime ".video-stitch-owner")) -ne "video-stitch-runtime-v2") {
+  throw "Uninstall lost ownership while preserving a runtime junction."
+}
+[IO.Directory]::Delete($junction)
+Install-SmokeApp
+$locked = [IO.File]::Open((Join-Path $runtime "locked-cache"), [IO.FileMode]::CreateNew,
+  [IO.FileAccess]::ReadWrite, [IO.FileShare]::None)
+try {
+  Uninstall-SmokeApp
+  if ([IO.File]::ReadAllText((Join-Path $runtime ".video-stitch-owner")) -ne "video-stitch-runtime-v2") {
+    throw "Uninstall lost ownership while a runtime file was locked."
+  }
+} finally { $locked.Dispose() }
+Install-SmokeApp
+Uninstall-SmokeApp
+if (Test-Path $runtime) { throw "Owned runtime directory remains after uninstall retry." }
 Write-Output "NSIS install/uninstall and export-data preservation checks passed."

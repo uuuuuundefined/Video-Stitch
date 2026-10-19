@@ -200,6 +200,8 @@ async fn exit_app(app: tauri::AppHandle, state: State<'_, DesktopState>) -> Resu
     state.service.shutdown().await?;
     #[cfg(target_os = "macos")]
     crate::cleanup::schedule()?;
+    #[cfg(windows)]
+    crate::runtime::schedule_cleanup()?;
     state.exiting.store(true, Ordering::SeqCst);
     app.exit(0);
     Ok(())
@@ -214,7 +216,7 @@ pub fn run() {
     let Some(_instance) = instance.filter(|file| file.try_lock().is_ok()) else {
         rfd::MessageDialog::new()
             .set_title("Video Stitch")
-            .set_description("当前应用已在运行，或无法获取运行锁。请使用已有窗口。")
+            .set_description("当前应用已在运行、正在退出清理，或无法获取运行锁。请稍后重试。")
             .show();
         return;
     };
@@ -323,19 +325,6 @@ pub fn run() {
                     }
                 }
             };
-            #[cfg(windows)]
-            {
-                // 先返回并释放 Tauri/WebView，再删除仍可能被浏览器占用的运行文件。
-                let code = app.run_return(on_event);
-                if let Err(error) = crate::runtime::cleanup() {
-                    rfd::MessageDialog::new()
-                        .set_title("运行数据未能清理")
-                        .set_description(error.message)
-                        .show();
-                }
-                std::process::exit(code);
-            }
-            #[cfg(not(windows))]
             app.run(on_event);
         }
         Err(error) => {

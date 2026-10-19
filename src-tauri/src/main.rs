@@ -5,5 +5,9 @@ fn main() {
     if video_stitch::cleanup::run_if_requested() {
         return;
     }
+    #[cfg(windows)]
+    if video_stitch::runtime::run_cleanup_if_requested() {
+        return;
+    }
     video_stitch::desktop::run();
 }
