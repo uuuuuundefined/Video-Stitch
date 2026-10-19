@@ -124,14 +124,7 @@ export default function App() {
 
   return (
     <div id="vs-terminal" aria-label="视频拼接工作台">
-      <div className="vs-window">
-        <div className="term-titlebar">
-          <span className="term-dots" aria-hidden="true">
-            ● ● ●
-          </span>
-          <span>video-stitch — terminal</span>
-          <span className="term-build">LOCAL / OFFLINE</span>
-        </div>
+      <div className="vs-content">
         <header className="term-header">
           <div className="term-brandline">
             <h1>
@@ -212,12 +205,12 @@ export default function App() {
               : (error ?? s?.summary.notice)}
           </div>
         </main>
-        <PerformanceBar
-          value={performance}
-          environment={environment}
-          summary={s?.summary}
-        />
       </div>
+      <PerformanceBar
+        value={performance}
+        environment={environment}
+        summary={s?.summary}
+      />
       <ConfirmDialog
         request={dialog}
         onClose={() => {

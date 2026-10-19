@@ -277,6 +277,20 @@ pub fn run() {
             .incognito(true);
             #[cfg(windows)]
             {
+                // 预留系统边框与标题栏，小屏幕或高缩放时底栏也位于可用工作区内。
+                if let Ok(Some(monitor)) = app.app_handle().primary_monitor() {
+                    let work = monitor.work_area();
+                    let scale = monitor.scale_factor();
+                    let width = (work.size.width as f64 / scale - 32.0).clamp(280.0, 1200.0);
+                    let height = (work.size.height as f64 / scale - 64.0).clamp(200.0, 860.0);
+                    builder = builder
+                        .min_inner_size(width.min(760.0), height.min(640.0))
+                        .inner_size(width, height)
+                        .position(
+                            work.position.x as f64 / scale + 8.0,
+                            work.position.y as f64 / scale + 8.0,
+                        );
+                }
                 builder = builder.data_directory(runtime_directory);
             }
             let _window = builder.build()?;

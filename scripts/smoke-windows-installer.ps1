@@ -64,6 +64,35 @@ try {
     }
   }
   if (!$opened) { throw "Installed application did not open its expected main window." }
+  # 用原生工作区边界检查初始窗口，避免底栏被任务栏或屏幕边缘遮住。
+  Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class VideoStitchWindowBounds {
+  [StructLayout(LayoutKind.Sequential)]
+  public struct Rect { public int Left, Top, Right, Bottom; }
+  [StructLayout(LayoutKind.Sequential)]
+  public struct Info { public int Size; public Rect Monitor, Work; public uint Flags; }
+  [DllImport("user32.dll")] static extern bool GetWindowRect(IntPtr window, out Rect rect);
+  [DllImport("user32.dll")] static extern IntPtr MonitorFromWindow(IntPtr window, uint flags);
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+  static extern bool GetMonitorInfo(IntPtr monitor, ref Info info);
+  public static Rect[] Measure(IntPtr window) {
+    Rect rect;
+    var info = new Info { Size = Marshal.SizeOf<Info>() };
+    if (!GetWindowRect(window, out rect) || !GetMonitorInfo(MonitorFromWindow(window, 2), ref info))
+      throw new InvalidOperationException("Cannot query native window bounds.");
+    return new[] { rect, info.Work };
+  }
+}
+'@
+  $bounds = [VideoStitchWindowBounds]::Measure($app.MainWindowHandle)
+  $window = $bounds[0]
+  $work = $bounds[1]
+  if ($window.Left -lt $work.Left -or $window.Top -lt $work.Top -or
+      $window.Right -gt $work.Right -or $window.Bottom -gt $work.Bottom) {
+    throw "Initial application window extends beyond the Windows work area."
+  }
   Start-Sleep -Seconds 3
   if (!$app.CloseMainWindow() -or !$app.WaitForExit(40000)) {
     # 失败时记录当前进程的原生窗口文字，保留清理错误弹窗等诊断依据。
