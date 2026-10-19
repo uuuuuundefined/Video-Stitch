@@ -50,6 +50,29 @@ function Uninstall-SmokeApp {
 }
 
 Install-SmokeApp
+# 无任务时关闭原生主窗口应经前端 IPC 正常退出，并释放、清理 WebView 数据。
+$app = Start-Process -FilePath (Join-Path $installation "video-stitch.exe") -PassThru
+try {
+  $opened = $false
+  for ($attempt = 0; $attempt -lt 45; $attempt++) {
+    Start-Sleep -Seconds 1
+    $app.Refresh()
+    if ($app.HasExited) { throw "Installed application exited before opening its main window." }
+    if ($app.MainWindowTitle -like "Video Stitch*视频拼接工作台") {
+      $opened = $true
+      break
+    }
+  }
+  if (!$opened) { throw "Installed application did not open its expected main window." }
+  Start-Sleep -Seconds 3
+  if (!$app.CloseMainWindow() -or !$app.WaitForExit(40000)) {
+    throw "Installed application did not close normally through the frontend."
+  }
+  if ($app.ExitCode -ne 0) { throw "Application exited with code $($app.ExitCode)." }
+  if (Test-Path $runtime) { throw "WebView runtime remains after normal exit." }
+} finally {
+  if (!$app.HasExited) { Stop-Process -Id $app.Id -Force }
+}
 New-Item -ItemType Directory -Path $runtime | Out-Null
 [IO.File]::WriteAllText((Join-Path $runtime "unknown.mp4"), "unknown-owner")
 Uninstall-SmokeApp
