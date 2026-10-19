@@ -25,7 +25,7 @@ npm run desktop
 
 macOS 固定版本构建：运行 `npm run media:sources`、`npm run media:build:mac`，再执行 `npm run desktop:build -- --bundles app`。源码 URL 和 SHA-256 已固定；构建只使用 Xcode Command Line Tools 自带编译器，不需要 Homebrew。脚本固定最低 macOS 13，包内包含匹配源码、许可证与 SHA-256。Windows 的媒体组件须在 Windows 构建并按校验和通过 `media:prepare` 提供；不能使用 Mac 二进制代替。
 
-Windows 构建入口和前置条件见 [Windows 构建说明](docs/WINDOWS_BUILD.md)。已提供固定源码的软件编码基础组件配方、PE 架构/DLL 依赖校验及 NSIS 离线 WebView2 配置；当前尚未在 Windows 执行，不能据此宣称 Windows 安装包或硬件编码验收通过。
+Windows 构建入口和前置条件见 [Windows 构建说明](docs/WINDOWS_BUILD.md)。已提供固定源码的软件编码基础组件配方、PE 架构/DLL 依赖校验及 NSIS 离线 WebView2 配置；已在 Windows runner 通过原生构建、媒体回归、启动立即关闭和安装/卸载数据保留验证；具体提交和限制见验证记录。硬件编码尚未验收。
 
 ## 检查
 
