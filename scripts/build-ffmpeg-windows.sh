@@ -10,7 +10,7 @@ test "$(sha256sum "$archive" | cut -d ' ' -f 1)" = 464beb5e7bf0c311e68b45ae2f04e
 test "$(sha256sum "$x264_archive" | cut -d ' ' -f 1)" = cd71a7515b0e9a012e1ac9b1f8415bebcaf6fc97d4db32286642ac4c0fbe24f9
 build=$(mktemp -d /tmp/video-stitch-ffmpeg.XXXXXX)
 trap 'rm -rf "$build"' EXIT HUP INT TERM
-tar -xf "$x264_archive" -C "$build"
+tar --force-local -xf "$x264_archive" -C "$build"
 cd "$build/x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55"
 ./configure --prefix="$build/x264-install" --host=x86_64-w64-mingw32 \
   --enable-static --disable-cli --disable-opencl --disable-avs --disable-lavf \
@@ -18,7 +18,7 @@ cd "$build/x264-b35605ace3ddf7c1a5d67a2eb553f034aef41d55"
 make -j "${VIDEO_STITCH_BUILD_JOBS:-4}" install-lib-static install-lib-dev
 export PKG_CONFIG_LIBDIR="$build/x264-install/lib/pkgconfig"
 export PKG_CONFIG_PATH=
-tar -xf "$archive" -C "$build"
+tar --force-local -xf "$archive" -C "$build"
 cd "$build/ffmpeg-8.1.2"
 ./configure --prefix="$build/install" --target-os=mingw32 --arch=x86_64 \
   --disable-autodetect --disable-everything --disable-shared --enable-static \

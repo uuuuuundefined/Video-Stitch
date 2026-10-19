@@ -48,13 +48,15 @@ jobs:
             mingw-w64-x86_64-pkgconf
       - name: Build static media components
         shell: msys2 {0}
-        run: npm run media:build:windows
+        run: sh scripts/build-ffmpeg-windows.sh
       - name: Run Windows media regression tests
         run: npm run test:media
       - name: Check Windows desktop code
         run: npm run rust -- clippy --manifest-path src-tauri/Cargo.toml --all-targets --locked -- -D warnings
       - name: Build offline NSIS installer
         run: npm run desktop:build -- --bundles nsis
+      - name: Verify NSIS install and uninstall data boundaries
+        run: ./scripts/smoke-windows-installer.ps1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: video-stitch-windows-x64

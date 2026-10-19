@@ -32,13 +32,29 @@ for (const source of sources) {
     bytes = Buffer.from(await response.arrayBuffer());
   } catch (error) {
     // 源站可能拒绝 Node HTTP 客户端，使用系统 curl 重试，仍校验同一份源码。
-    process.stderr.write(`${source.name}: ${error.message}; retrying with curl.\n`);
-    const result = spawnSync("curl", [
-      "--fail", "--location", "--retry", "3", "--retry-all-errors",
-      "--connect-timeout", "30", "--max-time", "120", source.url,
-    ], { maxBuffer: 64 * 1024 * 1024 });
+    process.stderr.write(
+      `${source.name}: ${error.message}; retrying with curl.\n`,
+    );
+    const result = spawnSync(
+      "curl",
+      [
+        "--fail",
+        "--location",
+        "--retry",
+        "3",
+        "--retry-all-errors",
+        "--connect-timeout",
+        "30",
+        "--max-time",
+        "120",
+        source.url,
+      ],
+      { maxBuffer: 64 * 1024 * 1024 },
+    );
     if (result.error || result.status !== 0)
-      throw new Error(`${source.name}: curl failed: ${result.error?.message ?? result.stderr.toString()}`);
+      throw new Error(
+        `${source.name}: curl failed: ${result.error?.message ?? result.stderr.toString()}`,
+      );
     bytes = result.stdout;
   }
   if (digest(bytes) !== source.sha256)
