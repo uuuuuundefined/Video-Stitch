@@ -1,3 +1,9 @@
+!macro NSIS_HOOK_PREUNINSTALL
+  ; Tauri's optional app-data cleanup recursively removes the whole parent.
+  ; Always use the owned-runtime hook below, even when that checkbox is selected.
+  StrCpy $DeleteAppDataCheckboxState 0
+!macroend
+
 !macro NSIS_HOOK_POSTUNINSTALL
   ; Remove only the new owned runtime. Legacy directories and exports are preserved.
   Push $0
