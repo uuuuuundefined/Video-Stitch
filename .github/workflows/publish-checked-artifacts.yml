@@ -1,0 +1,49 @@
+name: Publish checked artifacts
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/publish-checked-artifacts.yml]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Original release run ID (empty selects the draft's source run)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_RUN_ID: ${{ inputs.run_id }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - id: source
+        name: Verify original builds and unchanged product source
+        run: node scripts/resolve-release-run.mjs
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: video-stitch-*
+          merge-multiple: true
+          path: release-assets
+          run-id: ${{ steps.source.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Complete checked draft release
+        run: node scripts/publish-release.mjs
+        env:
+          RELEASE_TAG: ${{ steps.source.outputs.tag }}
+          RELEASE_SOURCE_SHA: ${{ steps.source.outputs.source_sha }}
