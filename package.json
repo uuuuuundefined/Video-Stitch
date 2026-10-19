@@ -18,7 +18,9 @@
     "bindings": "node scripts/rust.mjs test --manifest-path src-tauri/Cargo.toml --no-default-features export_contracts",
     "media:prepare": "node scripts/prepare-media.mjs",
     "media:sources": "node scripts/fetch-media.mjs",
-    "media:build:mac": "sh scripts/build-ffmpeg-macos.sh"
+    "media:build:mac": "sh scripts/build-ffmpeg-macos.sh",
+    "media:build:windows": "sh scripts/build-ffmpeg-windows.sh",
+    "test:media-components": "node --test scripts/media-components.test.mjs"
   },
   "dependencies": {
     "@tanstack/react-virtual": "3.14.21",

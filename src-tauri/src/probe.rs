@@ -216,12 +216,6 @@ pub async fn probe(binary: &Path, path: &Path, id: String) -> Result<Media> {
     if rotation.rem_euclid(90) != 0 {
         issues.push("暂不支持非直角旋转的视频");
     }
-    if let Some(a) = &audio {
-        let tolerance = (2.0 / fps.value()).max(2048.0 / f64::from(a.sample_rate));
-        if a.start + a.seconds > seconds + tolerance || a.start < -tolerance {
-            issues.push("音轨超出画面区间，无法完整保留原声，请先修复源文件");
-        }
-    }
     let signature = streams
         .iter()
         .filter(|s| s["codec_type"] == "video" || s["codec_type"] == "audio")

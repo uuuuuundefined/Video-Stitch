@@ -11,8 +11,7 @@
 </head>
 <body>
 <div id="vs-terminal" aria-label="CLI 终端风格的视频拼接工作台">
-  <div class="vs-window">
-    <div class="term-titlebar"><span class="term-dots" aria-hidden="true">● ● ●</span><span>video-stitch — terminal</span></div>
+  <div class="vs-content">
     <header class="term-header"><div class="term-brandline"><h1>VIDEO STITCH<span class="term-caret" aria-hidden="true">_</span></h1><p>视频拼接工作台 <span class="term-muted">/</span> 两组视频，自动组合。</p></div><button type="button" class="vs-text-button cursor-interaction" data-action="recover">恢复任务</button></header>
     <main>
       <input type="file" accept=".json,application/json" hidden data-recovery-input aria-label="选择任务恢复记录">
@@ -25,7 +24,8 @@
       <section class="term-export" aria-label="拼接设置与导出"><div class="term-section-label"><span>03 / EXPORT</span></div><div class="vs-settings"><fieldset><legend>转场 / transition</legend><div class="vs-segment"><button type="button" class="cursor-interaction" data-transition="none" aria-pressed="true">不选择转场</button><button type="button" class="cursor-interaction" data-transition="boundary-fade" aria-pressed="false">叠化</button></div></fieldset><label class="term-ratio-label">画面比例 / ratio<select class="cursor-interaction" data-ratio><option value="follow-b">跟随视频 B</option><option value="9:16">9:16 · 竖屏</option><option value="16:9">16:9 · 横屏</option><option value="1:1">1:1 · 方形</option></select></label><p class="term-setting-note" data-setting-note>等比裁边铺满 · 分辨率、帧率跟随 B</p></div><div class="term-command"><div class="term-destination"><span class="term-muted">output →</span><button type="button" class="vs-path cursor-interaction" data-action="folder"><span data-path>桌面 / 视频拼接_2026-10-17_153045</span><span class="term-change">[ 更改 ]</span></button></div><div class="vs-main-actions"><button type="button" class="vs-secondary cursor-interaction" data-action="cancel" hidden>取消</button><button type="button" class="vs-secondary cursor-interaction" data-action="pause" hidden>暂停队列</button><button type="button" class="vs-primary cursor-interaction" data-action="start"><span data-primary-label>开始导出 · 4 个视频</span><span aria-hidden="true">↵</span></button></div></div><div class="vs-overall" hidden><div class="term-overall-head"><span data-overall-label>已完成 0 / 4</span><span data-overall-detail>准备中</span></div><div class="vs-total-progress" role="progressbar" aria-label="整体导出进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div data-total-bar aria-hidden="true">[····················] 0%</div></div></div></section>
       <div class="vs-notice" role="status" aria-live="polite" data-notice></div>
     </main>
-    <footer class="term-statusbar"><span class="term-session">STITCH</span><span data-runtime>本地处理 · 就绪</span><div class="vs-metrics" aria-label="性能占用">
+  </div>
+  <footer class="term-statusbar"><span class="term-session">STITCH</span><span data-runtime>本地处理 · 就绪</span><div class="vs-metrics" aria-label="性能占用">
           <span data-tooltip="软件及相关子进程 CPU，按整机总算力统计">软件 CPU <b data-cpu>8%</b></span>
           <span data-tooltip="软件、界面及视频处理相关进程内存">软件内存 <b data-memory>186 MB</b></span>
           <span>系统内存 <b data-system-memory>9.4 / 32 GB</b></span>
@@ -34,7 +34,6 @@
           <span>剩余 <b data-eta>—</b></span>
           <span data-tooltip="输出磁盘剩余空间">磁盘 <b data-disk>128 GB</b></span>
         </div></footer>
-  </div>
   <dialog class="vs-dialog" aria-labelledby="vs-terminal-dialog-title"><form method="dialog"><div class="term-dialog-head"><h2 id="vs-terminal-dialog-title"></h2><button type="submit" class="vs-icon-button cursor-interaction" aria-label="关闭对话框">×</button></div><p data-dialog-copy></p><label class="term-dialog-field" hidden><span data-field-label></span><input type="text" data-dialog-input></label><div class="term-dialog-buttons"><button type="submit" class="vs-secondary cursor-interaction">返回</button><button type="button" class="vs-primary cursor-interaction" data-dialog-confirm>确定</button></div></form></dialog>
 </div>
 </body>

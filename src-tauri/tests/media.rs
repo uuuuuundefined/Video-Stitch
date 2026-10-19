@@ -180,6 +180,117 @@ async fn mixed_rates_silent_audio_short_clips_and_copy_are_valid() {
     assert_eq!(frame_count(&b, &output).await, 60);
 }
 
+/// 超长音轨不阻断输入，接缝后应播放 B 的静音而不是 A 的尾音。
+#[tokio::test]
+#[ignore = "requires real FFmpeg"]
+async fn audio_outside_video_interval_is_trimmed_without_blocking() {
+    use sha2::{Digest, Sha256};
+
+    let b = engine::locate().unwrap();
+    let dir = tempfile::tempdir().unwrap();
+    let source = dir.path().join("long-audio.mp4");
+    let args: Vec<String> = [
+        "-v",
+        "error",
+        "-f",
+        "lavfi",
+        "-i",
+        "testsrc2=size=128x72:rate=30:duration=1",
+        "-f",
+        "lavfi",
+        "-i",
+        "sine=frequency=440:sample_rate=48000:duration=2",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-pix_fmt",
+        "yuv420p",
+        "-c:a",
+        "aac",
+    ]
+    .into_iter()
+    .map(str::to_string)
+    .chain([source.to_string_lossy().into_owned()])
+    .collect();
+    process::capture(&b.ffmpeg, &args, 60).await.unwrap();
+    let bp = dir.path().join("silent-b.mp4");
+    fixture(&b, &bp, "128x72", "30", "0.5", false).await;
+    let p = probe::probe(&b.ffprobe, &bp, "b".into()).await.unwrap();
+    let mut inputs = vec![source];
+    // 可选真实素材复用相同正式处理和验收路径，不在仓库保存用户路径。
+    if let Some(path) = std::env::var_os("VIDEO_STITCH_QA_SOURCE") {
+        inputs.push(PathBuf::from(path));
+    }
+    for (index, source) in inputs.iter().enumerate() {
+        let a = probe::probe(&b.ffprobe, source, "a".into()).await.unwrap();
+        assert!(a.view.issue.is_none(), "{:?}", a.view.issue);
+        let audio = a.audio.as_ref().unwrap();
+        assert!(audio.start + audio.seconds > a.seconds);
+        for transition in [Transition::None, Transition::BoundaryFade] {
+            let plan = plan::build(
+                &a,
+                &p,
+                &Settings {
+                    ratio: Ratio::FollowB,
+                    transition,
+                },
+            )
+            .unwrap();
+            assert!(!plan.copy);
+            let out = dir
+                .path()
+                .join(format!("aligned-{index}-{transition:?}.mp4"));
+            engine::render_software(&b, &a, &p, &plan, &out)
+                .await
+                .unwrap();
+            assert_eq!(frame_count(&b, &out).await, plan.a_frames + plan.b_frames);
+            let seek = plan.a_frames as f64 / p.fps.value() + 0.15;
+            let args: Vec<String> = ["-v", "error", "-i"]
+                .into_iter()
+                .map(str::to_string)
+                .chain([
+                    out.to_string_lossy().into_owned(),
+                    "-ss".into(),
+                    format!("{seek:.9}"),
+                ])
+                .chain(
+                    [
+                        "-t",
+                        "0.2",
+                        "-map",
+                        "0:a:0",
+                        "-c:a",
+                        "pcm_s16le",
+                        "-f",
+                        "framehash",
+                        "-",
+                    ]
+                    .into_iter()
+                    .map(str::to_string),
+                )
+                .collect();
+            let hashes = process::capture(&b.ffmpeg, &args, 60).await.unwrap();
+            let hashes = String::from_utf8(hashes).unwrap();
+            let mut packets = 0;
+            for line in hashes
+                .lines()
+                .filter(|line| !line.starts_with('#') && !line.is_empty())
+            {
+                let fields: Vec<_> = line.split(',').map(str::trim).collect();
+                let bytes: usize = fields[4].parse().unwrap();
+                assert_eq!(
+                    fields[5],
+                    format!("{:x}", Sha256::digest(vec![0; bytes])),
+                    "A 的尾音进入了 B：{line}"
+                );
+                packets += 1;
+            }
+            assert!(packets > 0, "B 的静音区间没有解码出音频");
+        }
+    }
+}
+
 /// 等待真实队列完成；超时会给出当前任务状态以便定位失败。
 async fn wait(service: &Service) {
     for _ in 0..600 {

@@ -258,7 +258,10 @@ impl Service {
                             return Err(AppError::new("CANCELED", "导出已停止。"));
                         }
                         let info = info?;
-                        fs::File::open(&partial)?.sync_all()?;
+                        fs::OpenOptions::new()
+                            .write(true)
+                            .open(&partial)?
+                            .sync_all()?;
                         let identity = files::fingerprint(&partial)?;
                         let mut s = self.lock();
                         if cancel.load(Ordering::Relaxed)

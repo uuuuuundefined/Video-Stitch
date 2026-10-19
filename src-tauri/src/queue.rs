@@ -419,7 +419,9 @@ impl Service {
     pub fn set_directory(&self, directory: PathBuf) -> Result<()> {
         let mut state = self.lock();
         self.editable(&state)?;
-        state.directory = Some(fs::canonicalize(directory)?);
+        let directory = fs::canonicalize(directory)?;
+        crate::runtime::validate_output(&directory)?;
+        state.directory = Some(directory);
         state.revision += 1;
         Ok(())
     }

@@ -8,6 +8,7 @@ pub mod probe;
 pub mod process;
 pub mod queue;
 pub mod recovery;
+pub mod runtime;
 
 #[cfg(all(feature = "desktop", target_os = "macos"))]
 pub mod cleanup;

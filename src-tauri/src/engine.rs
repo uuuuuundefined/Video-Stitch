@@ -151,7 +151,7 @@ fn normalized(index: usize, media: &Media, frames: u64, plan: &Plan) -> String {
     format!("[{index}:{}]setpts=PTS-STARTPTS,scale=w='max(2,trunc(iw*sar/2)*2)':h=ih,setsar=1,scale={}:{}:force_original_aspect_ratio=increase:force_divisible_by=2:out_color_matrix=bt709:out_range=tv,crop={}:{},setsar=1,fps={}/{},tpad=stop_mode=clone:stop_duration=1,trim=end_frame={frames},settb=AVTB,setpts=PTS-STARTPTS,format=yuv420p",media.video_index,c.width,c.height,c.width,c.height,c.fps.num,c.fps.den)
 }
 
-/// 原音按各自时间区间补齐静音，不对声音执行交叉淡化。
+/// 原音映射到各段画面区间，超出部分裁掉、缺少部分补静音，不执行交叉淡化。
 fn audio(index: usize, media: &Media, seconds: f64) -> String {
     match &media.audio {
         Some(a) => {

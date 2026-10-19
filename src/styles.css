@@ -1,16 +1,15 @@
 /* 保留已确认的黑白像素终端布局，所有资源均来自本地。 */
 html {
+  height: 100%;
+  overflow: hidden;
   background: #0d0f0e;
   color-scheme: dark;
 }
 body {
+  height: 100%;
   margin: 0;
-  padding: 24px;
   min-width: 280px;
-}
-body > div {
-  max-width: 1280px;
-  margin: 0 auto;
+  overflow: hidden;
 }
 
 #vs-terminal {
@@ -22,7 +21,6 @@ body > div {
   --term-accent: #e2e6e1;
   --vs-gap: 24px;
   --vs-row: 13px;
-  --vs-shadow: 0px;
   font-family:
     ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono",
     "PingFang SC", "Microsoft YaHei", monospace;
@@ -31,6 +29,11 @@ body > div {
   color: var(--term-text);
   color-scheme: dark;
   width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  background: var(--term-bg);
 }
 
 #vs-terminal * {
@@ -76,30 +79,10 @@ body > div {
 #vs-terminal .term-accent {
   color: var(--term-accent);
 }
-#vs-terminal .vs-window {
-  background: var(--term-bg);
-  border: 1px solid var(--term-line);
-  box-shadow: var(--vs-shadow) var(--vs-shadow) 0 var(--term-line);
-  margin: 0 5px 5px 0;
-  position: relative;
-}
-#vs-terminal .term-titlebar {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 11px 18px;
-  border-bottom: 1px solid var(--term-line);
-  font-size: 11px;
-  background: var(--term-panel);
-  color: var(--term-muted);
-  min-height: 40px;
-  flex-wrap: wrap;
-}
-#vs-terminal .term-dots {
-  color: #687367;
-  font-size: 11px;
-  letter-spacing: 2px;
-  white-space: nowrap;
+#vs-terminal .vs-content {
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
 }
 #vs-terminal .term-header {
   padding: 22px var(--vs-gap) 27px;
@@ -332,6 +315,7 @@ body > div {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
+  min-width: 760px;
   font-size: 11px;
 }
 #vs-terminal .vs-table th {
@@ -359,16 +343,19 @@ body > div {
   white-space: nowrap;
 }
 #vs-terminal .vs-table th:nth-child(2) {
-  width: 29%;
+  width: 27%;
 }
 #vs-terminal .vs-table th:nth-child(3) {
   width: 9%;
 }
 #vs-terminal .vs-table th:nth-child(4) {
-  width: 13%;
+  width: 12%;
 }
 #vs-terminal .vs-table th:nth-child(5) {
-  width: 16%;
+  width: 14%;
+}
+#vs-terminal .vs-table th.vs-actions-column {
+  width: 110px;
 }
 #vs-terminal .vs-output-name {
   font-size: 12px;
@@ -391,8 +378,11 @@ body > div {
   flex-wrap: wrap;
   font-size: 11px;
 }
-#vs-terminal .vs-row-status .vs-text-button {
-  padding: 0;
+#vs-terminal .vs-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 #vs-terminal .vs-progress {
   font-size: 12px;
@@ -700,9 +690,6 @@ body > div {
   #vs-terminal .vs-table th:nth-child(5) {
     width: 15%;
   }
-  #vs-terminal .term-titlebar {
-    gap: 10px;
-  }
 }
 
 @media (max-width: 620px) {
@@ -711,12 +698,6 @@ body > div {
   }
   #vs-terminal h1 {
     font-size: 23px;
-  }
-  #vs-terminal .term-titlebar {
-    gap: 5px 9px;
-  }
-  #vs-terminal .term-titlebar > span:nth-child(2) {
-    overflow-wrap: anywhere;
   }
   #vs-terminal .term-header {
     padding: 22px var(--vs-gap);
@@ -738,6 +719,7 @@ body > div {
   #vs-terminal .vs-table,
   #vs-terminal .vs-table tbody {
     display: block;
+    min-width: 0;
   }
   #vs-terminal .vs-table thead {
     display: none;
@@ -759,8 +741,14 @@ body > div {
     display: none;
   }
   #vs-terminal .vs-table td:nth-child(2),
-  #vs-terminal .vs-table td:last-child {
+  #vs-terminal .vs-table td.vs-status-column,
+  #vs-terminal .vs-table td.vs-actions-column {
     grid-column: 1/-1;
+  }
+  #vs-terminal .vs-row-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px 10px;
   }
   #vs-terminal .vs-table td[data-label]:before {
     content: attr(data-label);
@@ -857,13 +845,6 @@ body > div {
   row-gap: 12px;
 }
 
-#vs-terminal .vs-row-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-}
-
 #vs-terminal [data-job-state="blocked"] {
   opacity: 0.8;
 }
@@ -875,9 +856,6 @@ body > div {
 }
 
 @media (max-width: 620px) {
-  body {
-    padding: 12px;
-  }
   #vs-terminal .vs-metrics {
     justify-content: flex-start;
     flex-basis: 100%;
@@ -891,11 +869,6 @@ body > div {
 }
 
 /* 正式应用沿用已确认原型，仅补充真实分页和原生拖入状态。 */
-#vs-terminal .term-build {
-  margin-left: auto;
-  letter-spacing: 2px;
-  font-size: 10px;
-}
 #vs-terminal .vs-import.is-over {
   outline: 2px dashed var(--term-accent);
   outline-offset: 4px;

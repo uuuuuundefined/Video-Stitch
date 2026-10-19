@@ -5,8 +5,8 @@ use crate::{
     queue::Service,
 };
 use std::{
-    collections::HashSet,
-    path::PathBuf,
+    collections::{HashMap, HashSet},
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
@@ -17,19 +17,58 @@ use tauri::{Emitter, Manager, State};
 struct DesktopState {
     service: Arc<Service>,
     grants: Mutex<HashSet<PathBuf>>,
+    dialog_directories: Mutex<HashMap<DialogPurpose, PathBuf>>,
     exiting: AtomicBool,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+enum DialogPurpose {
+    Video,
+    Recovery,
+    Output,
+}
+
+impl DesktopState {
+    /// 按用途复用本次运行的选择目录；目录失效时交回系统默认位置。
+    fn file_dialog(&self, purpose: DialogPurpose) -> rfd::AsyncFileDialog {
+        let directory = self
+            .dialog_directories
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .get(&purpose)
+            .cloned();
+        let dialog = rfd::AsyncFileDialog::new();
+        match directory.filter(|path| path.is_dir()) {
+            Some(directory) => dialog.set_directory(directory),
+            None => dialog,
+        }
+    }
+
+    /// 仅在确认选择后更新内存，不保存偏好文件或目录历史。
+    fn remember_directory(&self, purpose: DialogPurpose, directory: Option<&Path>) {
+        if let Some(directory) = directory {
+            self.dialog_directories
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .insert(purpose, directory.to_path_buf());
+        }
+    }
 }
 
 /// 使用原生文件选择器授权输入路径。
 #[tauri::command]
 async fn select_assets(state: State<'_, DesktopState>, group: String) -> Result<()> {
-    let files = rfd::AsyncFileDialog::new()
+    let files = state
+        .file_dialog(DialogPurpose::Video)
         .set_title("添加视频")
         .add_filter("视频", &["mp4", "mov", "m4v"])
         .pick_files()
         .await;
     clear_native_preferences()?;
     if let Some(files) = files {
+        if let Some(file) = files.first() {
+            state.remember_directory(DialogPurpose::Video, file.path().parent());
+        }
         state
             .service
             .import(
@@ -87,12 +126,14 @@ fn get_snapshot(state: State<'_, DesktopState>, page: usize) -> Snapshot {
 /// 通过原生选择器指定最终输出目录。
 #[tauri::command]
 async fn select_directory(state: State<'_, DesktopState>) -> Result<()> {
-    let folder = rfd::AsyncFileDialog::new()
+    let folder = state
+        .file_dialog(DialogPurpose::Output)
         .set_title("选择视频保存目录")
         .pick_folder()
         .await;
     clear_native_preferences()?;
     if let Some(folder) = folder {
+        state.remember_directory(DialogPurpose::Output, Some(folder.path()));
         state.service.set_directory(folder.path().to_path_buf())?;
     }
     Ok(())
@@ -135,13 +176,15 @@ async fn retry_tasks(state: State<'_, DesktopState>, id: Option<String>) -> Resu
 /// 用户选择恢复记录后重新验证源文件与输出身份。
 #[tauri::command]
 async fn select_recovery_record(state: State<'_, DesktopState>) -> Result<()> {
-    let file = rfd::AsyncFileDialog::new()
+    let file = state
+        .file_dialog(DialogPurpose::Recovery)
         .set_title("选择导出目录中的任务恢复记录")
         .add_filter("任务恢复记录", &["json"])
         .pick_file()
         .await;
     clear_native_preferences()?;
     if let Some(file) = file {
+        state.remember_directory(DialogPurpose::Recovery, file.path().parent());
         state.service.recover(file.path()).await?;
     }
     Ok(())
@@ -150,13 +193,15 @@ async fn select_recovery_record(state: State<'_, DesktopState>) -> Result<()> {
 /// 修复源文件路径必须经原生选择器重新授权。
 #[tauri::command]
 async fn relink_asset(state: State<'_, DesktopState>, id: String) -> Result<()> {
-    let file = rfd::AsyncFileDialog::new()
+    let file = state
+        .file_dialog(DialogPurpose::Video)
         .set_title("重新定位源视频并重新检查")
         .add_filter("视频", &["mp4", "mov", "m4v"])
         .pick_file()
         .await;
     clear_native_preferences()?;
     if let Some(file) = file {
+        state.remember_directory(DialogPurpose::Video, file.path().parent());
         state.service.relink(&id, file.path()).await?;
     }
     Ok(())
@@ -200,6 +245,8 @@ async fn exit_app(app: tauri::AppHandle, state: State<'_, DesktopState>) -> Resu
     state.service.shutdown().await?;
     #[cfg(target_os = "macos")]
     crate::cleanup::schedule()?;
+    #[cfg(windows)]
+    crate::runtime::schedule_cleanup()?;
     state.exiting.store(true, Ordering::SeqCst);
     app.exit(0);
     Ok(())
@@ -214,7 +261,7 @@ pub fn run() {
     let Some(_instance) = instance.filter(|file| file.try_lock().is_ok()) else {
         rfd::MessageDialog::new()
             .set_title("Video Stitch")
-            .set_description("当前应用已在运行，或无法获取运行锁。请使用已有窗口。")
+            .set_description("当前应用已在运行、正在退出清理，或无法获取运行锁。请稍后重试。")
             .show();
         return;
     };
@@ -226,18 +273,22 @@ pub fn run() {
         return;
     }
     #[cfg(windows)]
-    if let Err(error) = cleanup_runtime() {
-        rfd::MessageDialog::new()
-            .set_title("运行数据需要处理")
-            .set_description(error.message)
-            .show();
-        return;
-    }
+    let runtime_directory = match crate::runtime::prepare() {
+        Ok(directory) => directory,
+        Err(error) => {
+            rfd::MessageDialog::new()
+                .set_title("运行数据需要处理")
+                .set_description(error.message)
+                .show();
+            return;
+        }
+    };
     let service = Service::new(engine::locate().ok());
     let app = tauri::Builder::default()
         .manage(DesktopState {
             service: service.clone(),
             grants: Mutex::new(HashSet::new()),
+            dialog_directories: Mutex::new(HashMap::new()),
             exiting: AtomicBool::new(false),
         })
         .invoke_handler(tauri::generate_handler![
@@ -272,9 +323,28 @@ pub fn run() {
             .incognito(true);
             #[cfg(windows)]
             {
-                builder = builder.data_directory(runtime_directory());
+                // 预留系统边框与标题栏，小屏幕或高缩放时底栏也位于可用工作区内。
+                if let Ok(Some(monitor)) = app.app_handle().primary_monitor() {
+                    let work = monitor.work_area();
+                    let scale = monitor.scale_factor();
+                    let width = (work.size.width as f64 / scale - 32.0).clamp(280.0, 1200.0);
+                    let height = (work.size.height as f64 / scale - 64.0).clamp(200.0, 860.0);
+                    builder = builder
+                        .min_inner_size(width.min(760.0), height.min(640.0))
+                        .inner_size(width, height)
+                        .position(
+                            work.position.x as f64 / scale + 8.0,
+                            work.position.y as f64 / scale + 8.0,
+                        );
+                }
+                // WebView 创建期间会泵送 Windows 消息；监听器注册完成前不暴露可关闭窗口。
+                builder = builder.visible(false).data_directory(runtime_directory);
             }
-            let _window = builder.build()?;
+            let window = builder.build()?;
+            #[cfg(windows)]
+            window.show()?;
+            #[cfg(not(windows))]
+            let _ = window;
             tauri::async_runtime::spawn(async move {
                 service.initialize().await;
             });
@@ -287,6 +357,21 @@ pub fn run() {
                     if !state.exiting.load(Ordering::Relaxed) =>
                 {
                     api.prevent_close();
+                    #[cfg(windows)]
+                    if !state.service.snapshot(0).summary.locked {
+                        // 空队列直接受控退出，启动早期不依赖前端事件监听器就绪。
+                        let app = window.app_handle().clone();
+                        tauri::async_runtime::spawn(async move {
+                            let state = app.state::<DesktopState>();
+                            if let Err(error) = exit_app(app.clone(), state).await {
+                                rfd::MessageDialog::new()
+                                    .set_title("退出未完成")
+                                    .set_description(error.message)
+                                    .show();
+                            }
+                        });
+                        return;
+                    }
                     let _ = window.emit("close-requested", ());
                 }
                 tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {
@@ -302,32 +387,26 @@ pub fn run() {
         })
         .build(tauri::generate_context!());
     match app {
-        Ok(app) => app.run(|app, event| {
-            if matches!(event, tauri::RunEvent::Exit) {
-                if let Err(error) = clear_native_preferences() {
-                    rfd::MessageDialog::new()
-                        .set_title("运行数据未能清理")
-                        .set_description(error.message)
-                        .show();
+        Ok(app) => {
+            let on_event = |app: &tauri::AppHandle, event: tauri::RunEvent| {
+                if matches!(event, tauri::RunEvent::Exit) {
+                    if let Err(error) = clear_native_preferences() {
+                        rfd::MessageDialog::new()
+                            .set_title("运行数据未能清理")
+                            .set_description(error.message)
+                            .show();
+                    }
                 }
-            }
-            if let tauri::RunEvent::ExitRequested { api, .. } = event {
-                let state = app.state::<DesktopState>();
-                if !state.exiting.load(Ordering::Relaxed) {
-                    api.prevent_exit();
-                    let _ = app.emit("close-requested", ());
+                if let tauri::RunEvent::ExitRequested { ref api, .. } = event {
+                    let state = app.state::<DesktopState>();
+                    if !state.exiting.load(Ordering::Relaxed) {
+                        api.prevent_exit();
+                        let _ = app.emit("close-requested", ());
+                    }
                 }
-            }
-            #[cfg(windows)]
-            if matches!(event, tauri::RunEvent::Exit) {
-                if let Err(error) = cleanup_runtime() {
-                    rfd::MessageDialog::new()
-                        .set_title("运行数据未能清理")
-                        .set_description(error.message)
-                        .show();
-                }
-            }
-        }),
+            };
+            app.run(on_event);
+        }
         Err(error) => {
             let _ = rfd::MessageDialog::new()
                 .set_title("Video Stitch 启动失败")
@@ -353,33 +432,4 @@ fn clear_native_preferences() -> Result<()> {
         }
     }
     Ok(())
-}
-
-/// WebView 的私有运行目录与业务导出目录完全分离。
-#[cfg(windows)]
-fn runtime_directory() -> PathBuf {
-    dirs::data_local_dir()
-        .unwrap_or_else(std::env::temp_dir)
-        .join("com.videostitch.desktop")
-        .join("WebView")
-}
-
-/// 只清理固定自有 WebView 目录；失败通过原生提示交代路径。
-#[cfg(windows)]
-fn cleanup_runtime() -> Result<()> {
-    let directory = runtime_directory();
-    for _ in 0..30 {
-        match std::fs::remove_dir_all(&directory) {
-            Ok(()) => return Ok(()),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-            Err(_) => std::thread::sleep(std::time::Duration::from_millis(100)),
-        }
-    }
-    Err(AppError::new(
-        "CLEANUP_FAILED",
-        format!(
-            "请关闭残留的应用界面进程后删除软件私有目录：{}。导出目录不会被清理。",
-            directory.display()
-        ),
-    ))
 }

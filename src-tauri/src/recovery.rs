@@ -117,6 +117,7 @@ pub fn load(path: &Path) -> Result<(PathBuf, Record)> {
         path.parent()
             .ok_or_else(|| AppError::new("INVALID_RECORD", "恢复目录无效。"))?,
     )?;
+    crate::runtime::validate_output(&directory)?;
     let expected = record_path(&directory, &record.batch_id)?;
     let next = format!("unfinished-tasks.{}.next.json", record.batch_id);
     if path.file_name() != expected.file_name()

@@ -191,10 +191,13 @@ pub fn sync_directory(path: &Path) -> Result<()> {
 /// 默认批次目录在真正导出时创建，同秒冲突也不覆盖。
 pub fn create_output(custom: Option<&Path>) -> Result<PathBuf> {
     if let Some(path) = custom {
-        return Ok(fs::canonicalize(path)?);
+        let directory = fs::canonicalize(path)?;
+        crate::runtime::validate_output(&directory)?;
+        return Ok(directory);
     }
     let desktop = dirs::desktop_dir()
         .ok_or_else(|| AppError::new("OUTPUT_NOT_WRITABLE", "无法定位桌面，请选择保存目录。"))?;
+    crate::runtime::validate_output(&fs::canonicalize(&desktop)?)?;
     let stem = format!(
         "视频拼接_{}",
         chrono::Local::now().format("%Y-%m-%d_%H%M%S")
