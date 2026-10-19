@@ -306,6 +306,21 @@ pub fn run() {
                     if !state.exiting.load(Ordering::Relaxed) =>
                 {
                     api.prevent_close();
+                    #[cfg(windows)]
+                    if !state.service.snapshot(0).summary.locked {
+                        // 空队列直接受控退出，启动早期不依赖前端事件监听器就绪。
+                        let app = window.app_handle().clone();
+                        tauri::async_runtime::spawn(async move {
+                            let state = app.state::<DesktopState>();
+                            if let Err(error) = exit_app(app.clone(), state).await {
+                                rfd::MessageDialog::new()
+                                    .set_title("退出未完成")
+                                    .set_description(error.message)
+                                    .show();
+                            }
+                        });
+                        return;
+                    }
                     let _ = window.emit("close-requested", ());
                 }
                 tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {

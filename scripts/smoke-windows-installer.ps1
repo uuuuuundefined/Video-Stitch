@@ -50,22 +50,8 @@ function Uninstall-SmokeApp {
 }
 
 Install-SmokeApp
-# 无任务时关闭原生主窗口应经前端 IPC 正常退出，并释放、清理 WebView 数据。
-$app = Start-Process -FilePath (Join-Path $installation "video-stitch.exe") -PassThru
-try {
-  $opened = $false
-  for ($attempt = 0; $attempt -lt 45; $attempt++) {
-    Start-Sleep -Seconds 1
-    $app.Refresh()
-    if ($app.HasExited) { throw "Installed application exited before opening its main window." }
-    if ($app.MainWindowTitle -like "Video Stitch*视频拼接工作台") {
-      $opened = $true
-      break
-    }
-  }
-  if (!$opened) { throw "Installed application did not open its expected main window." }
-  # 用原生工作区边界检查初始窗口，避免底栏被任务栏或屏幕边缘遮住。
-  Add-Type @'
+# 无任务时首次出现主窗口便关闭，应由后端受控退出，并释放、清理 WebView 数据。
+Add-Type @'
 using System;
 using System.Runtime.InteropServices;
 public static class VideoStitchWindowBounds {
@@ -86,6 +72,21 @@ public static class VideoStitchWindowBounds {
   }
 }
 '@
+
+$app = Start-Process -FilePath (Join-Path $installation "video-stitch.exe") -PassThru
+try {
+  $opened = $false
+  for ($attempt = 0; $attempt -lt 45; $attempt++) {
+    Start-Sleep -Seconds 1
+    $app.Refresh()
+    if ($app.HasExited) { throw "Installed application exited before opening its main window." }
+    if ($app.MainWindowTitle -like "Video Stitch*视频拼接工作台") {
+      $opened = $true
+      break
+    }
+  }
+  if (!$opened) { throw "Installed application did not open its expected main window." }
+  # 用原生工作区边界检查初始窗口，避免底栏被任务栏或屏幕边缘遮住。
   $bounds = [VideoStitchWindowBounds]::Measure($app.MainWindowHandle)
   $window = $bounds[0]
   $work = $bounds[1]
@@ -93,7 +94,6 @@ public static class VideoStitchWindowBounds {
       $window.Right -gt $work.Right -or $window.Bottom -gt $work.Bottom) {
     throw "Initial application window extends beyond the Windows work area."
   }
-  Start-Sleep -Seconds 3
   if (!$app.CloseMainWindow() -or !$app.WaitForExit(40000)) {
     # 失败时记录当前进程的原生窗口文字，保留清理错误弹窗等诊断依据。
     try {
