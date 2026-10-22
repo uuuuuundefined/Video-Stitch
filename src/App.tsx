@@ -24,6 +24,7 @@ export default function App() {
     run,
   } = workbench;
   const [dialog, setDialog] = useState<DialogRequest | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [over, setOver] = useState<string | null>(null);
   const current = useRef(workbench);
   current.current = workbench;
@@ -123,7 +124,7 @@ export default function App() {
   }
 
   return (
-    <div id="vs-terminal" aria-label="视频拼接工作台">
+    <div id="vs-terminal" data-theme={theme} aria-label="视频拼接工作台">
       <div className="vs-content">
         <header className="term-header">
           <div className="term-brandline">
@@ -138,13 +139,34 @@ export default function App() {
               两组视频，自动组合。
             </p>
           </div>
-          <button
-            className="vs-text-button"
-            disabled={!desktopAvailable || busy || s?.summary.locked}
-            onClick={() => action(api.recover)}
-          >
-            恢复任务
-          </button>
+          <div className="term-header-actions">
+            <div className="vs-theme-switch" role="group" aria-label="界面主题">
+              <button
+                type="button"
+                className="vs-text-button"
+                aria-pressed={theme === "light"}
+                onClick={() => setTheme("light")}
+              >
+                日间
+              </button>
+              <span aria-hidden="true">/</span>
+              <button
+                type="button"
+                className="vs-text-button"
+                aria-pressed={theme === "dark"}
+                onClick={() => setTheme("dark")}
+              >
+                夜间
+              </button>
+            </div>
+            <button
+              className="vs-text-button"
+              disabled={!desktopAvailable || busy || s?.summary.locked}
+              onClick={() => action(api.recover)}
+            >
+              恢复任务
+            </button>
+          </div>
         </header>
         <main>
           <div className="term-section-label">
