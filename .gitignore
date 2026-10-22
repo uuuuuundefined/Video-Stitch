@@ -7,6 +7,7 @@ src-tauri/binaries/*
 src-tauri/resources/media/*
 !src-tauri/resources/media/NOTICE.md
 .DS_Store
+/.idea/
 *.tsbuildinfo
 src-tauri/gen/
 test-results/
